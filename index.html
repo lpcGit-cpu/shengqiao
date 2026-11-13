@@ -1,0 +1,4190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080B12">
+<meta name="description" content="声桥 · 听障人士线下消费沟通助手：柜台上的双向字幕、一键播报、确认卡与沟通凭证。">
+<title>声桥 · 听障人士线下消费沟通助手</title>
+<style>
+:root{
+  --bg:#070A11;
+  --bg2:#0C111C;
+  --panel:#111827;
+  --line:#22304A;
+  --text:#F1F5FF;
+  --muted:#8FA0BE;
+  --accent:#3BE0B2;
+  --accent-ink:#052F26;
+  --warn:#FFB43D;
+  --warn-ink:#2A1B00;
+  --danger:#FF6B7A;
+  --radius:16px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  margin:0;
+  background:
+    radial-gradient(120% 70% at 50% -10%, #10233A 0%, transparent 55%),
+    radial-gradient(80% 60% at 80% 100%, #0E1B2A 0%, transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+button{font-family:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------------- 手机容器 ---------------- */
+.phone{
+  --fs-cap:27px;
+  --fs-my:21px;
+  --fs-chip:17px;
+  /* 常见手机比例：9 : 19.5 ≈ 2.1667（iPhone 14 / 主流安卓）。
+     想改成 9:20 就写 2.2222，9:18 写 2。 */
+  --phone-ratio:2.1667;
+  position:relative;
+  width:100%;
+  max-width:460px;
+  height:100vh;
+  height:100dvh;
+  background:linear-gradient(180deg,#0A101B 0%,#070A11 45%);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.phone[data-fs="s"]{--fs-cap:22px;--fs-my:18px;--fs-chip:16px}
+.phone[data-fs="l"]{--fs-cap:33px;--fs-my:25px;--fs-chip:19px}
+
+/* 视口比手机更“宽/矮”时（桌面、平板、分屏），按 9:19.5 比例缩放显示；
+   真实手机竖屏（约 9:19.5 或更窄）仍然满屏。 */
+@media (min-width: 900px) and (min-height: 600px){
+  .phone{
+    --pw:min(calc(100vw - 56px), calc((100dvh - 56px) / var(--phone-ratio)), 440px);
+    width:var(--pw);
+    max-width:none;
+    height:calc(var(--pw) * var(--phone-ratio));
+    border-radius:38px;
+    border:1px solid #26344E;
+    box-shadow:
+      0 0 0 8px rgba(10,15,26,.55),
+      0 30px 90px rgba(0,0,0,.7);
+  }
+}
+
+/* ---------------- 视图切换 ---------------- */
+.view{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transform:translateY(10px);
+  transition:opacity .26s ease,transform .26s ease;
+  z-index:1;
+}
+.view.is-active{opacity:1;pointer-events:auto;transform:none;z-index:2}
+
+/* ---------------- 首页 ---------------- */
+.home-scroll{flex:1;overflow-y:auto;padding-bottom:8px}
+.home-head{padding:26px 22px 0}
+.pill{
+  display:inline-block;font-size:12px;color:var(--accent);
+  border:1px solid rgba(59,224,178,.32);background:rgba(59,224,178,.08);
+  padding:4px 10px;border-radius:999px;letter-spacing:.3px;
+}
+.logo{
+  display:flex;align-items:center;gap:9px;
+  color:var(--accent);font-weight:800;font-size:21px;letter-spacing:1px;
+  margin:18px 0 10px;
+}
+.home-head h1{
+  margin:0;font-size:34px;line-height:1.26;letter-spacing:-.6px;font-weight:800;
+  background:linear-gradient(180deg,#FFFFFF 20%,#A8E9D6 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.lead{margin:14px 0 0;font-size:14.5px;line-height:1.75;color:var(--muted)}
+
+.home-body{padding:22px 22px 0}
+.section-label{font-size:12.5px;color:var(--muted);letter-spacing:1px;margin-bottom:10px}
+.scenes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scene{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 14px 12px;text-align:left;color:var(--text);
+  display:flex;flex-direction:column;gap:5px;min-height:78px;
+  cursor:pointer;transition:transform .14s ease,border-color .14s ease,background .14s ease;
+}
+.scene:hover,.scene:active{transform:translateY(-1px);border-color:rgba(59,224,178,.45);background:#131C2D}
+.scene-name{font-size:18px;font-weight:700}
+.scene-hint{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.ghost-btn{
+  width:100%;margin-top:14px;padding:14px;border-radius:14px;
+  background:transparent;border:1px dashed #2C3B57;color:var(--muted);
+  font-size:14.5px;cursor:pointer;transition:.15s;
+}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tiny{font-size:11.5px;color:#66799A;line-height:1.6;margin:10px 2px 0}
+.tiny.center{text-align:center}
+.home-foot{
+  display:flex;gap:16px;justify-content:center;
+  font-size:11.5px;color:#5E7093;padding:20px 0 calc(20px + env(safe-area-inset-bottom));
+}
+
+/* ---------------- 对话页 ---------------- */
+.talk-head{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;border-bottom:1px solid var(--line);
+  background:rgba(10,15,26,.92);backdrop-filter:blur(10px);z-index:6;
+}
+.icon-btn{
+  width:38px;height:38px;flex:0 0 auto;border-radius:12px;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+  font-size:16px;display:grid;place-items:center;cursor:pointer;
+}
+.icon-btn:active{transform:scale(.96)}
+.fs-btn{font-size:13px;font-weight:700;color:var(--muted)}
+.talk-head .scene-name{flex:1;font-size:14.5px;font-weight:600;color:var(--muted)}
+.head-space{width:38px}
+.end-btn{
+  padding:9px 13px;border-radius:11px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:13.5px;cursor:pointer;
+}
+
+.stage{flex:1;display:flex;flex-direction:column;min-height:0}
+.stage-head{display:flex;align-items:center;gap:8px;padding:10px 18px 0;font-size:12px;color:var(--muted)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4B5A78;flex:0 0 auto}
+.live-dot.on{background:var(--accent);animation:pulse 1.7s infinite}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(59,224,178,.45)}
+  70%{box-shadow:0 0 0 9px rgba(59,224,178,0)}
+  100%{box-shadow:0 0 0 0 rgba(59,224,178,0)}
+}
+
+.captions{
+  flex:1;min-height:0;overflow-y:auto;
+  padding:12px 16px 16px;
+  display:flex;flex-direction:column;gap:12px;
+  scroll-behavior:auto;
+}
+
+.msg{border-radius:18px;padding:12px 14px;max-width:100%;animation:rise .22s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.clerk{background:linear-gradient(180deg,#151D2E,#111827);border:1px solid #22304A;border-top-left-radius:6px}
+.msg.me{
+  align-self:flex-end;max-width:92%;
+  background:linear-gradient(180deg,rgba(59,224,178,.15),rgba(59,224,178,.07));
+  border:1px solid rgba(59,224,178,.3);border-top-right-radius:6px;
+}
+.msg-meta{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.msg-text{font-size:var(--fs-cap);line-height:1.45;font-weight:600;letter-spacing:.2px;word-break:break-word}
+.msg.me .msg-text{font-size:var(--fs-my);font-weight:500;line-height:1.5}
+mark.hl{
+  background:linear-gradient(transparent 56%,rgba(255,180,61,.5) 56%);
+  color:inherit;padding:0 2px;border-radius:3px;
+}
+.replay{
+  margin-top:8px;padding:6px 11px;border-radius:999px;
+  background:rgba(59,224,178,.12);border:1px solid rgba(59,224,178,.28);
+  color:var(--accent);font-size:12.5px;cursor:pointer;
+}
+
+.ghost-line{color:var(--muted);font-size:calc(var(--fs-cap) - 5px);line-height:1.45;padding:0 6px;opacity:.85}
+
+/* 确认卡 */
+.card{
+  background:rgba(255,180,61,.07);border:1px solid rgba(255,180,61,.35);
+  border-radius:16px;padding:12px 14px;animation:rise .25s ease-out;
+}
+.card.done{opacity:.7}
+.card.doubt{border-color:rgba(255,107,122,.45)}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.card-tag{font-size:11.5px;font-weight:700;color:var(--warn);background:rgba(255,180,61,.14);padding:3px 9px;border-radius:999px}
+.card-src{font-size:11px;color:var(--muted)}
+.card-list{list-style:none;margin:0 0 11px;padding:0;display:flex;flex-direction:column;gap:7px}
+.card-list li{display:flex;gap:10px;align-items:baseline;font-size:17px}
+.card-list .k{color:var(--muted);font-size:12.5px;min-width:46px;flex:0 0 auto}
+.card-list .v{font-weight:700;word-break:break-word}
+.card-actions{display:flex;gap:8px}
+.card-actions button{flex:1;padding:11px;border-radius:11px;font-size:15px;font-weight:600;cursor:pointer;border:none}
+.card-actions .ok{background:var(--accent);color:var(--accent-ink)}
+.card-actions .no{background:transparent;border:1px solid rgba(255,180,61,.5);color:var(--warn)}
+.done-tip{color:var(--accent);font-size:14px;font-weight:700}
+
+/* 风险提示 */
+.risk{
+  position:absolute;left:12px;right:12px;bottom:172px;z-index:30;
+  background:linear-gradient(180deg,#2A1B00,#170F00);
+  border:1px solid rgba(255,180,61,.5);border-radius:16px;padding:14px;
+  box-shadow:0 14px 44px rgba(0,0,0,.65);
+  animation:rise .25s ease-out;
+}
+.risk-tag{color:var(--warn);font-size:12px;font-weight:800;margin-bottom:7px;letter-spacing:.5px}
+.risk-text{font-size:14.5px;line-height:1.55;margin-bottom:11px}
+.risk-actions{display:flex;gap:8px}
+.risk-no{
+  flex:1.5;background:var(--warn);color:var(--warn-ink);
+  border:none;border-radius:11px;padding:11px;font-weight:800;font-size:14.5px;cursor:pointer;
+}
+.risk-ok{
+  flex:1;background:transparent;border:1px solid var(--line);
+  color:var(--muted);border-radius:11px;padding:11px;font-size:13.5px;cursor:pointer;
+}
+
+/* 快捷话术 */
+.quick{
+  display:flex;gap:8px;overflow-x:auto;
+  padding:10px 16px;border-top:1px solid var(--line);
+  background:rgba(7,10,17,.92);
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.quick::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;padding:10px 15px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+  font-size:var(--fs-chip);white-space:nowrap;cursor:pointer;transition:.14s;
+}
+.chip:active{transform:scale(.97);background:#1A2438}
+.chip.new{border-color:var(--warn);color:var(--warn);background:rgba(255,180,61,.1)}
+
+/* 输入区 */
+.composer{
+  display:flex;gap:8px;align-items:center;
+  padding:10px 14px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);background:#0A0F1A;
+}
+#myInput{
+  flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;color:var(--text);font-size:16px;outline:none;
+}
+#myInput::placeholder{color:#5E7093}
+#myInput:focus{border-color:rgba(59,224,178,.55)}
+.round-btn{
+  width:46px;height:46px;flex:0 0 auto;border-radius:14px;
+  background:var(--panel);border:1px solid var(--line);
+  color:var(--text);font-size:18px;display:grid;place-items:center;cursor:pointer;
+}
+.round-btn.on{background:rgba(59,224,178,.16);border-color:rgba(59,224,178,.55)}
+.pass-btn{font-size:12px;font-weight:700;color:var(--muted);line-height:1.1}
+.send-btn{
+  width:62px;height:46px;flex:0 0 auto;border-radius:14px;border:none;
+  background:var(--accent);color:var(--accent-ink);
+  font-size:16px;font-weight:800;cursor:pointer;
+}
+.send-btn:active{transform:scale(.97)}
+
+/* ---------------- 凭证页 ---------------- */
+.receipt-scroll{flex:1;overflow-y:auto;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.receipt-card{
+  background:linear-gradient(180deg,#111827,#0D1420);
+  border:1px solid var(--line);border-radius:20px;padding:18px;
+}
+.rc-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px;font-weight:700}
+.rc-top span:last-child{font-size:12px;color:var(--muted);font-weight:400;white-space:nowrap}
+.rc-sub{font-size:11.5px;color:var(--muted);letter-spacing:1px;margin:16px 0 8px}
+.rc-facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rc-facts li{display:flex;gap:10px;align-items:baseline;font-size:15.5px}
+.rc-facts .k{color:var(--muted);font-size:12.5px;min-width:46px}
+.rc-facts .v{font-weight:700}
+.rc-risk{font-size:13.5px;line-height:1.7;color:var(--warn);white-space:pre-line}
+.rc-lines{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.rc-lines li{font-size:14px;line-height:1.55;color:#C9D6EE}
+.rc-lines .who{color:var(--muted);font-size:11.5px;margin-right:6px}
+.receipt-actions{display:flex;gap:10px;margin-top:14px}
+.receipt-actions button{
+  flex:1;padding:13px;border-radius:13px;font-size:15px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+}
+.receipt-actions button:first-child{background:rgba(59,224,178,.14);border-color:rgba(59,224,178,.4);color:var(--accent)}
+
+/* ---------------- 递屏 ---------------- */
+.overlay{
+  position:absolute;inset:0;z-index:40;
+  background:radial-gradient(120% 80% at 50% 0%,#11263B 0%,#05070C 72%);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:28px;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+.overlay.show{opacity:1;pointer-events:auto}
+.pass-top{font-size:13px;color:var(--muted);letter-spacing:2px}
+.pass-text{
+  font-size:42px;font-weight:800;line-height:1.32;letter-spacing:1px;
+  margin:24px 0;word-break:break-word;
+}
+.pass-hint{font-size:13.5px;color:var(--muted);line-height:1.75;max-width:330px}
+.pass-actions{display:flex;gap:10px;margin-top:28px;width:100%;max-width:360px}
+.pass-actions button{
+  flex:1;padding:14px;border-radius:14px;font-size:15.5px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+}
+.pass-actions .primary{background:var(--accent);color:var(--accent-ink);border:none;font-weight:800}
+
+/* ---------------- 提示条 ---------------- */
+.toast{
+  position:absolute;left:50%;top:66px;z-index:90;
+  transform:translate(-50%,-10px);
+  background:#1B2438;border:1px solid var(--line);color:#E7EEFF;
+  padding:10px 16px;border-radius:14px;font-size:13px;
+  max-width:88%;text-align:center;line-height:1.5;
+  opacity:0;pointer-events:none;transition:.2s ease;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ---------------- 自定义场景入口 ---------------- */
+.add-scene{
+  width:100%;margin-top:10px;padding:14px;border-radius:14px;
+  border:1px dashed rgba(59,224,178,.38);background:rgba(59,224,178,.05);
+  color:var(--accent);font-size:14.5px;font-weight:700;cursor:pointer;
+  transition:.15s;
+}
+.add-scene:hover{background:rgba(59,224,178,.1);border-color:rgba(59,224,178,.6)}
+.add-scene:active{transform:scale(.99)}
+
+.help-btn{
+  display:block;width:calc(100% - 44px);margin:0 auto calc(20px + env(safe-area-inset-bottom));
+  padding:13px;border-radius:13px;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:13.5px;cursor:pointer;transition:.15s;
+}
+.help-btn:hover{border-color:rgba(59,224,178,.45);color:var(--accent)}
+
+/* 自定义场景卡片 */
+.scene{position:relative}
+.scene-tag{
+  position:absolute;top:9px;right:9px;
+  font-size:10px;line-height:1;color:var(--accent);
+  background:rgba(59,224,178,.12);border:1px solid rgba(59,224,178,.25);
+  padding:4px 6px;border-radius:999px;
+}
+.scene-edit{
+  position:absolute;bottom:7px;right:7px;
+  width:26px;height:26px;border-radius:8px;
+  background:#1A2438;border:1px solid var(--line);color:var(--muted);
+  font-size:12px;display:grid;place-items:center;cursor:pointer;
+}
+.scene-edit:hover{color:var(--accent);border-color:rgba(59,224,178,.45)}
+.scene.has-actions .scene-hint{padding-right:28px}
+.scene.has-actions .scene-name{padding-right:40px;word-break:break-all}
+
+/* ---------------- 底部弹层（自定义场景 / 使用说明） ---------------- */
+.sheet{
+  position:absolute;inset:0;z-index:80;
+  display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity .22s ease;
+}
+.sheet.show{opacity:1;pointer-events:auto}
+.sheet-mask{
+  position:absolute;inset:0;
+  background:rgba(4,7,12,.74);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+}
+.sheet-panel{
+  position:relative;width:100%;max-height:88%;
+  overflow-y:auto;overscroll-behavior:contain;
+  background:#0E1522;border-top:1px solid var(--line);
+  border-radius:22px 22px 0 0;
+  padding:8px 18px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(16px);transition:transform .22s ease;
+  box-shadow:0 -20px 50px rgba(0,0,0,.55);
+}
+.sheet.show .sheet-panel{transform:none}
+.sheet-handle{width:38px;height:4px;border-radius:99px;background:#2C3B57;margin:8px auto 14px}
+.sheet-panel h2{font-size:19px;margin:0 0 16px;letter-spacing:.3px}
+.sheet-panel h3{font-size:12.5px;color:var(--accent);margin:20px 0 9px;letter-spacing:1px}
+
+.field{display:block;margin-bottom:13px}
+.field span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:11px 12px;color:var(--text);
+  font-size:15.5px;font-family:inherit;outline:none;resize:vertical;
+}
+.field input:focus,.field textarea:focus{border-color:rgba(59,224,178,.55)}
+.field input::placeholder,.field textarea::placeholder{color:#5E7093}
+
+.sheet-actions{display:flex;gap:8px;margin-top:18px}
+.sheet-actions button{
+  flex:1;padding:13px;border-radius:13px;font-size:15px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);color:var(--text);
+}
+.sheet-actions .primary{background:var(--accent);color:var(--accent-ink);border:none;font-weight:800}
+.sheet-actions .danger{
+  flex:0 0 auto;padding:13px 15px;
+  color:var(--danger);background:rgba(255,107,122,.08);border-color:rgba(255,107,122,.32);
+}
+
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.steps li{font-size:14px;line-height:1.65;color:#D6E1F5}
+.steps b{color:var(--accent);font-weight:700}
+.help-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px}
+.help-list li{font-size:13.5px;line-height:1.65;color:#C9D6EE}
+.help-list b{color:var(--text)}
+
+.sheet-panel details{border-top:1px dashed var(--line);padding:11px 0;font-size:14px}
+.sheet-panel details summary{cursor:pointer;color:var(--text);font-weight:600;font-size:14px}
+.sheet-panel details summary::marker{color:var(--accent)}
+.sheet-panel details p{margin:9px 0 0;color:var(--muted);line-height:1.7;font-size:13.5px}
+
+/* 自定义场景卡片占满一行，避免出现半格空位 */
+.scene.has-actions{min-height:0}
+
+/* ---------------- 视频柜台 ---------------- */
+.video-cta{
+  display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:14px;
+  border-radius:16px;text-align:left;cursor:pointer;color:var(--text);
+  background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(59,224,178,.12));
+  border:1px solid rgba(91,140,255,.35);transition:.15s;
+}
+.video-cta:hover{border-color:rgba(91,140,255,.6);transform:translateY(-1px)}
+.video-cta:active{transform:scale(.99)}
+.video-cta .vc-icon{font-size:22px;line-height:1}
+.video-cta b{display:block;font-size:15.5px}
+.video-cta em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.55}
+
+#view-call{background:#05070C}
+#callVideo{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;background:#05070C;
+}
+#view-call.mirror #callVideo{transform:scaleX(-1)}
+.call-shade{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(5,7,12,.6) 0%,rgba(5,7,12,0) 22%,rgba(5,7,12,0) 58%,rgba(5,7,12,.9) 100%);
+}
+
+.call-head{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:14px 16px}
+.call-status{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:#DCE6F8;
+  background:rgba(10,15,26,.6);padding:7px 12px;border-radius:999px;
+  -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+}
+.call-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.7s infinite}
+#callTimer{color:var(--muted);font-variant-numeric:tabular-nums}
+.call-icon{
+  width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.14);
+  background:rgba(10,15,26,.55);color:#EAF1FF;font-size:16px;cursor:pointer;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+
+.call-badge{
+  position:absolute;top:64px;left:16px;
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:#DCE6F8;
+  background:rgba(10,15,26,.55);padding:6px 11px;border-radius:999px;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+.call-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+.call-badge.found{color:#CFF7EA;border:1px solid rgba(59,224,178,.35)}
+.call-badge.found .dot{background:var(--accent)}
+
+.face-box{
+  position:absolute;border:2px solid rgba(59,224,178,.9);border-radius:14px;
+  box-shadow:0 0 0 9999px rgba(3,6,11,.18);
+  transition:all .25s ease;pointer-events:none;
+}
+.face-box::after{
+  content:"店员";position:absolute;top:-11px;left:8px;
+  font-size:10px;color:#052F26;background:var(--accent);
+  padding:2px 7px;border-radius:999px;font-weight:700;
+}
+
+.call-tip{
+  position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+  width:78%;text-align:center;padding:16px 18px;border-radius:16px;
+  background:rgba(8,12,20,.72);border:1px solid rgba(255,255,255,.08);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.call-tip.show{opacity:1}
+.call-tip b{display:block;font-size:16px;margin-bottom:6px}
+.call-tip span{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.call-captions{
+  position:absolute;left:14px;right:14px;bottom:130px;
+  display:flex;flex-direction:column;gap:8px;justify-content:flex-end;
+  max-height:42%;overflow:hidden;
+}
+.cap{
+  background:rgba(8,12,20,.74);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:10px 13px;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  animation:rise .2s ease-out;
+}
+.cap .who{font-size:11px;color:var(--muted);margin-right:6px}
+.cap .txt{font-size:19px;font-weight:600;line-height:1.45}
+.cap.me{background:rgba(59,224,178,.16);border-color:rgba(59,224,178,.3);align-self:flex-end;max-width:92%}
+.cap.me .who{color:#9BF0D8}
+
+.call-controls{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;justify-content:space-around;align-items:flex-end;
+  padding:14px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.ctrl{
+  width:68px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  background:none;border:none;color:#EAF1FF;font-size:11px;cursor:pointer;
+}
+.ctrl i{
+  width:56px;height:56px;border-radius:50%;font-style:normal;font-size:22px;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:.15s;
+}
+.ctrl:active i{transform:scale(.94)}
+.ctrl.on i{background:rgba(59,224,178,.9);border-color:transparent;color:#052F26}
+.ctrl.hangup i{background:#FF5A6A;border-color:transparent}
+
+/* 指一指确认书 */
+.point-sub{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.point-big{font-size:25px;font-weight:800;line-height:1.38;margin:0 0 14px;letter-spacing:.2px}
+.point-chips{display:flex;flex-wrap:wrap;gap:8px}
+.point-chips .chip{font-size:14px;padding:9px 13px}
+.point-chips .chip.on{
+  border-color:rgba(59,224,178,.6);color:var(--accent);background:rgba(59,224,178,.1);
+}
+
+/* ---------------- 快捷话术条：偏好排序 + 自定义常用语 ---------------- */
+.quick-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px 10px 16px;
+  border-top:1px solid var(--line);
+  background:rgba(7,10,17,.94);
+}
+.quick{
+  display:flex;gap:8px;align-items:center;
+  flex:1;min-width:0;
+  overflow-x:auto;overflow-y:hidden;
+  padding:0;border:none;background:none;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.quick::-webkit-scrollbar{display:none}
+.quick-add{
+  flex:0 0 auto;width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(59,224,178,.45);background:rgba(59,224,178,.1);
+  color:var(--accent);font-size:17px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;transition:.15s;
+}
+.quick-add:hover{background:rgba(59,224,178,.18)}
+.quick-add:active{transform:scale(.94)}
+
+/* 常用语管理弹层 */
+.phrase-row{display:flex;gap:8px}
+.phrase-row input{flex:1;min-width:0}
+.phrase-row button{
+  flex:0 0 auto;padding:0 18px;border-radius:12px;border:none;
+  background:var(--accent);color:var(--accent-ink);
+  font-size:14.5px;font-weight:800;cursor:pointer;
+}
+.phrase-list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.phrase-list li{
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:11px 12px;
+}
+.phrase-list .pt{flex:1;min-width:0;font-size:15px;line-height:1.45;word-break:break-all}
+.phrase-list .pn{flex:0 0 auto;font-size:11px;color:var(--accent);opacity:.85}
+.phrase-del{
+  flex:0 0 auto;width:28px;height:28px;border-radius:8px;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:12px;cursor:pointer;
+}
+.phrase-del:hover{color:var(--danger);border-color:rgba(255,107,122,.4)}
+.phrase-list .phrase-empty{
+  justify-content:center;color:var(--muted);font-size:13px;
+  background:transparent;border-style:dashed;
+}
+
+/* 全局 / 置顶 词组样式 */
+.chip.global{border-color:rgba(91,140,255,.45);background:rgba(91,140,255,.1)}
+.chip.pinned{border-color:rgba(255,180,61,.5);background:rgba(255,180,61,.1)}
+.chip-tag{
+  display:inline-block;font-size:10px;line-height:1;padding:3px 5px;border-radius:5px;
+  background:rgba(91,140,255,.2);color:#A9C0FF;margin-right:6px;vertical-align:1px;
+}
+.chip-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--warn);margin-right:6px;vertical-align:1px;
+}
+.switch-row{
+  display:flex;align-items:center;gap:9px;
+  margin:10px 0 2px;font-size:13px;color:var(--muted);cursor:pointer;
+}
+.switch-row input{width:18px;height:18px;accent-color:#3BE0B2;flex:0 0 auto}
+
+/* 长按拖动排序 */
+.quick{user-select:none;-webkit-user-select:none}
+.chip{touch-action:manipulation;transition:transform .12s ease,border-color .12s ease}
+.chip.dragging{
+  transform:scale(1.06);
+  border-color:var(--accent);
+  background:#1A2438;
+  box-shadow:0 12px 28px rgba(0,0,0,.55);
+  position:relative;z-index:3;
+}
+
+/* ---------------- 紧急求助 ---------------- */
+.sos-cta{
+  display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:14px;
+  border-radius:16px;text-align:left;cursor:pointer;color:var(--text);
+  background:linear-gradient(135deg,rgba(255,90,106,.18),rgba(255,180,61,.1));
+  border:1px solid rgba(255,90,106,.45);transition:.15s;
+}
+.sos-cta:hover{border-color:rgba(255,90,106,.75)}
+.sos-cta:active{transform:scale(.99)}
+.sos-cta b{display:block;font-size:15.5px;color:#FFD9DE}
+.sos-cta em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.55}
+
+.sos{
+  position:absolute;inset:0;z-index:95;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(120% 80% at 50% 0%, #1C0508 0%, #080406 72%);
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.sos.show{opacity:1;pointer-events:auto}
+.sos-inner{width:100%;padding:24px 20px;text-align:center;display:flex;flex-direction:column;gap:12px}
+.sos-kicker{font-size:12px;letter-spacing:2px;color:#FF8A98}
+.sos-big{font-size:34px;font-weight:800;line-height:1.3;letter-spacing:1px}
+.sos-sub{font-size:13px;color:var(--muted)}
+.sos-row{display:flex;gap:10px}
+.sos-btn{
+  flex:1;padding:16px 12px;border-radius:16px;font-size:16px;font-weight:700;
+  text-decoration:none;color:var(--text);background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;
+}
+.sos-btn.danger{background:#FF5A6A;border-color:#FF5A6A;color:#2A0006}
+.sos-btn:active{transform:scale(.98)}
+.sos-contact{display:flex;gap:8px;margin-top:4px}
+.sos-contact input{
+  flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px;color:var(--text);font-size:15px;outline:none;
+}
+.sos-contact button{
+  flex:0 0 auto;padding:0 16px;border-radius:12px;border:1px solid rgba(59,224,178,.45);
+  background:rgba(59,224,178,.12);color:var(--accent);font-size:14.5px;font-weight:700;cursor:pointer;
+}
+.sos-tip{font-size:11.5px;color:#8A6A70;line-height:1.6;margin:2px 4px 0}
+.sos-close{
+  margin-top:8px;padding:14px;border-radius:14px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:15px;cursor:pointer;
+}
+
+/* ---------------- 手写板（递屏第二页） ---------------- */
+.pass-tabs{display:flex;gap:8px;margin-bottom:10px}
+.pass-tabs button{
+  padding:8px 14px;border-radius:999px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:13px;cursor:pointer;
+}
+.pass-tabs button.on{background:rgba(59,224,178,.14);border-color:rgba(59,224,178,.45);color:var(--accent)}
+.pass-write{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px}
+#writePad{
+  width:100%;height:44vh;min-height:220px;border-radius:16px;
+  background:#0A1220;border:1px dashed rgba(255,255,255,.18);
+  touch-action:none;cursor:crosshair;
+}
+.write-tools{display:flex;align-items:center;gap:10px;justify-content:center}
+.write-tools button{
+  padding:8px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font-size:13px;cursor:pointer;
+}
+.write-tools span{font-size:11.5px;color:var(--muted)}
+
+
+/* ---------------- 叫号提醒 ---------------- */
+.call-controls .ctrl{width:58px}
+.call-controls .ctrl i{width:52px;height:52px;font-size:20px}
+.queue{
+  position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);
+  z-index:36;text-align:center;padding:22px 18px 18px;border-radius:22px;
+  background:linear-gradient(180deg,#152238,#0B1220);
+  border:1px solid rgba(59,224,178,.55);
+  box-shadow:0 24px 70px rgba(0,0,0,.75), 0 0 0 9999px rgba(3,6,11,.35);
+  animation:qIn .22s ease-out;
+}
+@keyframes qIn{from{opacity:0;transform:translateY(-50%) scale(.94)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+.queue[hidden]{display:none}
+.queue.pulse{animation:qIn .22s ease-out, qPulse 1.2s ease-out 2}
+@keyframes qPulse{0%{box-shadow:0 24px 70px rgba(0,0,0,.75),0 0 0 9999px rgba(3,6,11,.35),0 0 0 0 rgba(59,224,178,.55)}100%{box-shadow:0 24px 70px rgba(0,0,0,.75),0 0 0 9999px rgba(3,6,11,.35),0 0 0 26px rgba(59,224,178,0)}}
+.q-kicker{font-size:12px;letter-spacing:2px;color:var(--accent)}
+.q-no{font-size:76px;font-weight:800;line-height:1.02;letter-spacing:2px;margin-top:6px;font-variant-numeric:tabular-nums}
+.q-where{font-size:22px;font-weight:700;color:var(--accent);margin-top:4px}
+.q-raw{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;min-height:16px}
+.q-close{
+  margin-top:14px;padding:11px 26px;border-radius:12px;border:none;
+  background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:800;cursor:pointer;
+}
+
+/* ---------------- 首页一屏布局（不用上下滑） ---------------- */
+.home-scroll{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
+.home-head{padding:16px 20px 0}
+.home-head .pill{font-size:11px;padding:3px 9px}
+.logo{margin:10px 0 4px;font-size:19px}
+.logo svg{width:22px;height:22px}
+.home-head h1{font-size:29px;line-height:1.22}
+.lead{font-size:12.5px;line-height:1.55;margin-top:8px}
+.home-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 18px 0}
+.section-label{font-size:11px;margin-bottom:6px}
+.scenes{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;grid-auto-rows:1fr;gap:7px}
+.scene{min-height:0;padding:9px 12px;border-radius:13px;gap:4px;justify-content:center}
+.scene-name{font-size:15.5px}
+.scene-hint{font-size:10px}
+.scene-tag{top:7px;right:7px;font-size:9px;padding:3px 5px}
+.scene-edit{width:22px;height:22px;bottom:6px;right:6px;font-size:11px;border-radius:7px}
+.scene-add{
+  border-style:dashed;border-color:rgba(59,224,178,.35);
+  background:rgba(59,224,178,.04);align-items:center;justify-content:center;gap:2px;
+}
+.scene-add .plus{font-size:15px;line-height:1;color:var(--accent)}
+.scene-add .scene-hint{color:var(--accent);opacity:.85}
+.cta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cta-row .video-cta,.cta-row .sos-cta{
+  margin:0;padding:9px 11px;border-radius:14px;text-align:left;cursor:pointer;
+  display:grid;grid-template-columns:auto 1fr;grid-template-areas:"icon title" "icon sub";
+  gap:0 8px;align-items:center;
+}
+.cta-row .vc-icon{grid-area:icon;font-size:17px;line-height:1}
+.cta-row b{grid-area:title;display:block;font-size:13.5px}
+.cta-row em{grid-area:sub;display:block;font-style:normal;font-size:10px;line-height:1.4;color:var(--muted);margin-top:1px}
+.home-links{display:flex;gap:8px;margin:8px 0 0}
+.home-link{
+  flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);
+  background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:.15s;
+}
+.home-link:hover{color:var(--accent);border-color:rgba(59,224,178,.45)}
+.home-foot{padding:10px 0 calc(12px + env(safe-area-inset-bottom));font-size:10.5px;gap:12px}
+
+
+
+
+.scene-add.wide{grid-column:1 / -1}
+
+/* ---------------- 场景长按排序 / 删除 ---------------- */
+.scene{transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease;touch-action:manipulation}
+.scene.lifted{
+  transform:scale(1.05);border-color:var(--accent);
+  box-shadow:0 14px 34px rgba(0,0,0,.6);z-index:3;position:relative;
+}
+.restore-btn{
+  width:100%;margin-top:7px;padding:9px;border-radius:11px;
+  border:1px dashed rgba(255,180,61,.4);background:rgba(255,180,61,.06);
+  color:var(--warn);font-size:12px;cursor:pointer;flex:0 0 auto;
+}
+.act-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.act-list button{
+  padding:14px;border-radius:13px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font-size:15px;cursor:pointer;
+}
+.act-list button.danger{color:var(--danger);border-color:rgba(255,107,122,.35);background:rgba(255,107,122,.07)}
+
+/* 常用语面板：排序 / 置顶按钮 */
+.phrase-list li{gap:6px}
+.phrase-list .pt{flex:1;min-width:0;font-size:14px;line-height:1.4;word-break:break-all}
+.phrase-list .pn{flex:0 0 auto;font-size:10.5px;color:var(--accent);opacity:.85;font-style:normal}
+.pbtn{
+  flex:0 0 auto;width:28px;height:28px;border-radius:8px;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:11px;line-height:1;display:grid;place-items:center;cursor:pointer;
+}
+.pbtn:active{transform:scale(.94)}
+.pbtn.on{color:var(--warn);border-color:rgba(255,180,61,.55);background:rgba(255,180,61,.1)}
+.pbtn:disabled{opacity:.28;cursor:default}
+
+/* ---------------- 使用说明导语 / 演示结束卡 ---------------- */
+.help-lead{font-size:13px;color:var(--muted);line-height:1.65;margin:-4px 0 6px}
+.demo-end{
+  margin-top:4px;padding:14px;border-radius:16px;
+  background:rgba(59,224,178,.07);border:1px dashed rgba(59,224,178,.4);
+  display:flex;flex-direction:column;gap:9px;animation:rise .25s ease-out;
+}
+.demo-end b{font-size:15px}
+.demo-end span{font-size:12px;color:var(--muted)}
+.demo-links{display:flex;gap:8px;flex-wrap:wrap}
+.demo-links button{
+  flex:1;min-width:92px;padding:10px;border-radius:11px;
+  border:1px solid rgba(59,224,178,.45);background:rgba(59,224,178,.12);
+  color:var(--accent);font-size:13px;cursor:pointer;
+}
+
+/* ---------------- 引导 / 设置 ---------------- */
+.phone[data-fs="xl"]{--fs-cap:38px;--fs-my:29px;--fs-chip:22px}
+.seg{display:flex;gap:8px}
+.seg button{
+  flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);font-size:14px;cursor:pointer;
+}
+.seg button.on{border-color:rgba(59,224,178,.55);color:var(--accent);background:rgba(59,224,178,.12);font-weight:700}
+#settingsBox{
+  width:100%;margin-top:10px;padding:11px 12px;border-radius:12px;
+  border:1px solid var(--line);background:var(--panel);color:var(--text);
+  font-size:12.5px;line-height:1.5;font-family:ui-monospace,Consolas,monospace;resize:vertical;
+}
+
+
+/* 手机竖屏：避开 Netlify 右下角徽标，按钮上移一点 */
+@media (max-width:700px){
+  /* Netlify 徽标是固定 iframe：不让它挡住点击，并把按钮抬到它上面 */
+  #nl-badge-frame{pointer-events:none !important}
+  .composer{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+  .call-controls{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+  .home-scroll{padding-bottom:10px}
+}
+
+
+/* 不支持收音时的键盘语音提示 */
+.kb-voice{
+  margin:10px 0;padding:12px 14px;border-radius:14px;
+  border:1px dashed rgba(255,180,61,.5);background:rgba(255,180,61,.08);
+  display:flex;flex-direction:column;gap:4px;cursor:pointer;
+}
+.kb-voice b{font-size:13.5px;color:var(--warn)}
+.kb-voice span{font-size:12px;color:var(--muted);line-height:1.5}
+
+
+/* 不兼容浏览器的提醒条 */
+.compat{
+  display:flex;align-items:center;gap:8px;
+  margin:8px 14px 4px;padding:9px 11px;border-radius:12px;
+  border:1px solid rgba(255,180,61,.45);background:rgba(255,180,61,.1);
+  font-size:12px;color:#FFD79A;line-height:1.4;
+}
+.compat[hidden]{display:none}
+.compat span{flex:1}
+.compat button{
+  flex:0 0 auto;border:1px solid rgba(255,180,61,.5);background:transparent;
+  color:#FFD79A;border-radius:9px;padding:6px 9px;font-size:12px;cursor:pointer;
+}
+.quick{scroll-padding-right:56px}
+
+</style>
+</head>
+<body>
+<div class="phone" id="phone" data-fs="m">
+
+  <!-- ================= 首页 ================= -->
+  <section class="view is-active" id="view-home">
+    <div class="home-scroll">
+      <div class="compat" id="compatBar" hidden>
+        <span id="compatText">当前浏览器可能不支持语音识别与播报</span>
+        <button id="compatCopy" type="button">复制链接</button>
+        <button id="compatClose" type="button" aria-label="关闭">✕</button>
+      </div>
+      <header class="home-head">
+        <span class="pill">智能体涌现奖 · 参赛作品</span>
+        <div class="logo">
+          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+            <path d="M4 22c0-7 5.4-12 12-12s12 5 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            <circle cx="4" cy="22" r="2.8" fill="currentColor"/>
+            <circle cx="28" cy="22" r="2.8" fill="currentColor"/>
+            <path d="M11.5 22h9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+          </svg>
+          <span>声桥</span>
+        </div>
+        <h1>听不见，<br>也能把话说明白。</h1>
+        <p class="lead">柜台上的双向翻译：店员说的实时变成大字，我想说的一键播报，价格和承诺变成一张确认卡。</p>
+      </header>
+
+      <div class="home-body">
+        <div class="section-label">先选一个场景</div>
+        <div class="scenes" id="scenes"></div>
+        <button class="restore-btn" id="btnRestore" type="button" hidden>恢复隐藏的场景</button>
+        <div class="cta-row">
+          <button class="video-cta" id="btnVideo" type="button">
+            <span class="vc-icon" aria-hidden="true">📹</span>
+            <b>视频柜台</b>
+            <em>立在柜台上，看店员、出字幕、指一下替你问</em>
+          </button>
+          <button class="sos-cta" id="btnSos" type="button">
+            <span class="vc-icon" aria-hidden="true">🆘</span>
+            <b>紧急求助</b>
+            <em>大字给对方看，一键 120 / 110，短信给家人</em>
+          </button>
+        </div>
+        <div class="home-links">
+          <button class="home-link" id="btnDemo" type="button">▶ 看演示</button>
+          <button class="home-link" id="btnHelp" type="button">使用说明</button>
+          <button class="home-link" id="btnSettings" type="button">设置</button>
+        </div>
+      </div>
+
+      <footer class="home-foot">
+        <span>● 不依赖声音</span>
+        <span>● 支持大字</span>
+        <span>● 原音不落盘</span>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ================= 对话 ================= -->
+  <section class="view" id="view-talk">
+    <header class="talk-head">
+      <button class="icon-btn" id="btnBack" aria-label="返回首页">←</button>
+      <div class="scene-name" id="sceneName">对话</div>
+      <button class="icon-btn fs-btn" id="btnFs" aria-label="切换字号">A+</button>
+      <button class="end-btn" id="btnEnd">结束</button>
+    </header>
+
+    <div class="stage">
+      <div class="stage-head">
+        <span class="live-dot" id="liveDot"></span>
+        <span id="liveText">点麦克风开始收音</span>
+      </div>
+      <div class="captions" id="captions" aria-live="polite" aria-atomic="false"></div>
+    </div>
+
+    <div class="risk" id="risk" hidden></div>
+
+    <div class="quick-bar">
+      <div class="quick" id="quick" aria-label="快捷话术"></div>
+      <button class="quick-add" id="btnPhrase" type="button" aria-label="管理常用语">＋</button>
+    </div>
+
+    <div class="composer">
+      <button class="round-btn mic-btn" id="btnMic" aria-label="开始或暂停收音">🎤</button>
+      <input id="myInput" type="text" inputmode="text" autocomplete="off" placeholder="打字，或点上面的词组">
+      <button class="send-btn" id="btnSend" aria-label="说出这句话">说</button>
+      <button class="round-btn pass-btn" id="btnPass" aria-label="递给店员看">递屏</button>
+    </div>
+  </section>
+
+  <!-- ================= 视频柜台 ================= -->
+  <section class="view" id="view-call">
+    <video id="callVideo" playsinline autoplay muted></video>
+    <div class="call-shade"></div>
+
+    <header class="call-head">
+      <div class="call-status">
+        <span class="call-dot"></span>
+        <span id="callStateText">正在连接…</span>
+        <span id="callTimer">00:00</span>
+      </div>
+      <button class="call-icon" id="btnCamSwitch" type="button" aria-label="切换摄像头">⇄</button>
+    </header>
+
+    <div class="call-badge" id="clerkBadge">
+      <span class="dot"></span>
+      <span id="clerkBadgeText">正在识别店员…</span>
+    </div>
+    <div class="face-box" id="faceBox" hidden></div>
+
+    <div class="call-tip" id="callTip">
+      <b>把手机立在柜台上</b>
+      <span>镜头对着店员，想提问时用手指一下，或直接点画面</span>
+    </div>
+
+    <div class="call-captions" id="callCaptions" aria-live="polite"></div>
+
+    <div class="queue" id="queueAlert" hidden>
+      <div class="q-kicker">🔔 叫号</div>
+      <div class="q-no" id="qNo">38</div>
+      <div class="q-where" id="qWhere">2 号窗口</div>
+      <div class="q-raw" id="qRaw"></div>
+      <button class="q-close" id="qClose" type="button">知道了</button>
+    </div>
+
+    <footer class="call-controls">
+      <button class="ctrl" id="btnSubs" type="button"><i>💬</i><span>字幕</span></button>
+      <button class="ctrl on" id="btnQueue" type="button"><i>🔔</i><span>叫号</span></button>
+      <button class="ctrl" id="btnPoint" type="button"><i>☝</i><span>指一指</span></button>
+      <button class="ctrl" id="btnFlip" type="button"><i>⇄</i><span>翻转</span></button>
+      <button class="ctrl hangup" id="btnHangup" type="button"><i>✕</i><span>挂断</span></button>
+    </footer>
+  </section>
+
+  <!-- ================= 凭证 ================= -->
+  <section class="view" id="view-receipt">
+    <header class="talk-head">
+      <button class="icon-btn" id="btnHome" aria-label="返回首页">←</button>
+      <div class="scene-name">沟通凭证</div>
+      <div class="head-space"></div>
+    </header>
+    <div class="receipt-scroll">
+      <div class="receipt-card">
+        <div class="rc-top">
+          <span id="rcScene">—</span>
+          <span id="rcTime">—</span>
+        </div>
+        <div class="rc-sub">确认过的信息</div>
+        <ul class="rc-facts" id="rcFacts"></ul>
+        <div class="rc-sub">风险提示</div>
+        <div class="rc-risk" id="rcRisk">无</div>
+        <div class="rc-sub">对话记录</div>
+        <ol class="rc-lines" id="rcLines"></ol>
+      </div>
+      <div class="receipt-actions">
+        <button id="btnCopy">复制文字</button>
+        <button id="btnDownload">保存 .txt</button>
+        <button id="btnComplaint">生成投诉材料</button>
+      </div>
+      <p class="tiny center">凭证只保存在本机，不上传服务器；原音不会保存。</p>
+    </div>
+  </section>
+
+  <!-- ================= 递屏给店员 ================= -->
+  <div class="overlay" id="pass" aria-hidden="true">
+    <div class="pass-tabs">
+      <button class="on" data-ptab="say" type="button">我说</button>
+      <button data-ptab="write" type="button">您写给我</button>
+    </div>
+    <div class="pass-top">请把手机给我看 · 我听不见</div>
+    <div class="pass-text" id="passText">请说慢一点，谢谢</div>
+    <div class="pass-write" id="passWrite" hidden>
+      <canvas id="writePad"></canvas>
+      <div class="write-tools">
+        <button id="btnPadClear" type="button">清空</button>
+        <span>请用手指在框里写字</span>
+      </div>
+    </div>
+    <div class="pass-hint" id="passHint">您正常说话就行，屏幕上会显示文字；我会打字或让手机替我说。</div>
+    <div class="pass-actions">
+      <button id="passSpeak">再播报一次</button>
+      <button id="passClose" class="primary">好了，还给我</button>
+    </div>
+  </div>
+
+  <!-- ================= 自定义场景 ================= -->
+  <div class="sheet" id="sceneSheet" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="sheetTitle">自定义场景</h2>
+      <label class="field">
+        <span>场景名称（必填）</span>
+        <input id="fName" type="text" maxlength="10" placeholder="例如：医院挂号" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>小字说明（可选）</span>
+        <input id="fHint" type="text" maxlength="20" placeholder="例如：挂号 / 取药 / 缴费" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>对方常说的第一句（可选）</span>
+        <input id="fGreet" type="text" maxlength="30" placeholder="例如：您好，请问挂哪个科？" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>我常说的话（每行一条，最多 6 条）</span>
+        <textarea id="fQuick" rows="4" maxlength="120" placeholder="我要挂内科&#10;有医保&#10;再说一遍"></textarea>
+      </label>
+      <div class="sheet-actions">
+        <button id="btnDel" class="danger" type="button" hidden>删除</button>
+        <button id="btnCancel" type="button" data-close>取消</button>
+        <button id="btnSave" class="primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 使用说明 ================= -->
+  <div class="sheet" id="helpSheet" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="helpTitle">使用说明</h2>
+      <p class="help-lead">把手机放在柜台上：对方说的变大字，你想说的点一下就播报。</p>
+
+      <h3>一分钟上手</h3>
+      <ol class="steps">
+        <li><b>选场景</b>：点首页卡片（点餐 / 便利店 / 医院…）。长按卡片可拖动排序、隐藏或移到最前。</li>
+        <li><b>开始</b>：进对话点左下 🎤，把手机放柜台；也可以直接点下面的词组。</li>
+        <li><b>确认</b>：弹出「确认卡」点「都对」；听错点「不对，重问」。</li>
+        <li><b>收尾</b>：点「结束」存凭证；要维权点「生成投诉材料」。</li>
+      </ol>
+
+      <h3>四个常用功能</h3>
+      <ul class="help-list">
+        <li><b>递屏</b>：整屏大字给对方看；切「您写给我」，对方可以直接手写。</li>
+        <li><b>视频柜台</b>：手机立在柜台上，店员入镜自动出字幕；听到“38 号到 2 号窗口”会震动弹号码；手指一下替你问；点「＋」整理常用语。</li>
+        <li><b>紧急求助</b>：大字“请帮我打 120”，一键拨号，或发短信给家人。</li>
+        <li><b>医院 / 药店</b>：自动抽出楼层、空腹、用法、金额，遇到自费会提醒。</li>
+      </ul>
+
+      <h3>三个小技巧</h3>
+      <ul class="help-list">
+        <li>离说话人 20–30 厘米，字幕更准。</li>
+        <li>太吵或对方说方言：用递屏 / 手写板。</li>
+        <li>字太小点右上 <b>A+</b>；不想出声就只看字幕。</li>
+      </ul>
+
+      <h3>常见问题</h3>
+      <details><summary>麦克风没反应？</summary><p>需要 Chrome / Edge，并用 https 或 localhost 打开；微信内置浏览器不支持。可先点首页「看演示」。</p></details>
+      <details><summary>没有声音？</summary><p>这台设备没装中文语音包。不影响使用，屏幕就是给对方看的。</p></details>
+      <details><summary>会录音吗？</summary><p>不会。原音不保存、不上传，只留你自己生成的文字凭证。</p></details>
+      <details><summary>换手机会丢设置吗？</summary><p>会。场景、常用语、隐藏项都存在本机浏览器里；点下面「设置」可以导出再导入。</p></details>
+
+      <div class="sheet-actions">
+        <button id="btnHelpSettings" type="button">设置</button>
+        <button class="primary" type="button" data-close>知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 指一指 · 确认书 ================= -->
+  <div class="sheet" id="pointSheet" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="pointTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="pointTitle">确认书 · 我猜你想问</h2>
+      <p class="point-sub" id="pointLoc">你指的方向</p>
+      <div class="point-big" id="pointText">这个多少钱？</div>
+      <div class="point-chips" id="pointChips"></div>
+      <div class="sheet-actions">
+        <button id="btnPointRetry" type="button">重新指</button>
+        <button id="btnPointSay" class="primary" type="button">就这句，替我说</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 常用语管理 ================= -->
+  <div class="sheet" id="phraseSheet" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="phraseTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="phraseTitle">常用语</h2>
+      <p class="point-sub" id="phraseSub">点得越多越靠左；这里可以直接上下排序、置顶或删除。</p>
+      <div class="field">
+        <span>加一句要说的话（最多 20 字）</span>
+        <div class="phrase-row">
+          <input id="phraseInput" type="text" maxlength="20" placeholder="例如：不要香菜" autocomplete="off">
+          <button id="btnPhraseAdd" type="button">添加</button>
+        </div>
+        <label class="switch-row"><input type="checkbox" id="phraseGlobal"><span>所有场景都能用（全局，固定在最左）</span></label>
+      </div>
+      <div class="rc-sub">本场景词组（▲▼ 排序 / 📌 置顶）</div>
+      <ul class="phrase-list" id="phraseList"></ul>
+      <div class="rc-sub">全局常用语（每个场景都有）</div>
+      <ul class="phrase-list" id="phraseGlobalList"></ul>
+      <p class="tiny">长按词组可置顶 / 取消置顶，按住拖动可排序；本场景最多 10 句。</p>
+      <div class="sheet-actions"><button class="primary" type="button" data-close>完成</button></div>
+    </div>
+  </div>
+
+  <!-- ================= 紧急求助 ================= -->
+  <div class="sos" id="sos" aria-hidden="true">
+    <div class="sos-inner">
+      <div class="sos-kicker">紧急求助 · 我听不见</div>
+      <div class="sos-big" id="sosBig">请帮我拨打 120</div>
+      <div class="sos-sub">把屏幕给对方看，或直接点下面的按钮</div>
+      <div class="sos-row">
+        <a class="sos-btn danger" href="tel:120" id="sos120">📞 拨打 120</a>
+        <a class="sos-btn danger" href="tel:110" id="sos110">📞 拨打 110</a>
+      </div>
+      <div class="sos-row">
+        <button class="sos-btn" id="sosSpeak" type="button">🔊 播报求助</button>
+        <button class="sos-btn" id="sosCopy" type="button">📋 复制求助文字</button>
+      </div>
+      <div class="sos-contact">
+        <input id="sosPhone" type="tel" inputmode="tel" placeholder="紧急联系人手机号（只存本机）">
+        <button id="sosSms" type="button">发短信</button>
+      </div>
+      <p class="sos-tip">真实拨号会打开手机拨号盘；电脑上不能拨号，请用「复制求助文字」。</p>
+      <button class="sos-close" id="sosClose" type="button">关闭</button>
+    </div>
+  </div>
+
+  <!-- ================= 首次进入引导 ================= -->
+  <div class="sheet" id="welcome" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="welcomeTitle">30 秒上手</h2>
+      <p class="point-sub">听不见的时候，把手机放在柜台上就行。</p>
+      <ol class="steps">
+        <li><b>选场景</b>：点餐 / 便利店 / 医院…</li>
+        <li><b>对方说话</b>：屏幕自动出大字</li>
+        <li><b>你要说</b>：点一下词组，手机替你说</li>
+      </ol>
+      <div class="sheet-actions">
+        <button id="welcomeDemo" class="primary" type="button">看 30 秒演示</button>
+        <button id="welcomeSkip" type="button">我自己试</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 设置 ================= -->
+  <div class="sheet" id="settings" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="settingsTitle">设置</h2>
+
+      <div class="rc-sub">字号</div>
+      <div class="seg" id="fsSeg">
+        <button type="button" data-fs="m">标准</button>
+        <button type="button" data-fs="l">大</button>
+        <button type="button" data-fs="xl">特大</button>
+      </div>
+
+      <div class="rc-sub">换手机不丢设置</div>
+      <div class="sheet-actions">
+        <button id="btnExport" type="button">复制设置</button>
+        <button id="btnExportFile" type="button">存成文件</button>
+      </div>
+      <textarea id="settingsBox" rows="3" placeholder="把复制的设置粘到这里，再点「导入」"></textarea>
+      <div class="sheet-actions">
+        <button id="btnImport" class="primary" type="button">导入</button>
+        <button id="btnWipe" class="danger" type="button">清空本机数据</button>
+      </div>
+      <p class="tiny">场景、常用语、字号都只存在这台手机的浏览器里。</p>
+      <div class="sheet-actions"><button class="primary" type="button" data-close>完成</button></div>
+    </div>
+  </div>
+  <!-- ================= 场景长按操作 ================= -->
+  <div class="sheet" id="sceneAction" aria-hidden="true">
+    <div class="sheet-mask" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sceneActionTitle">
+      <div class="sheet-handle"></div>
+      <h2 id="sceneActionTitle">场景</h2>
+      <p class="point-sub" id="sceneActionSub">按住拖动可以换位置</p>
+      <div class="act-list">
+        <button id="sceneActTop" type="button">移到最前</button>
+        <button id="sceneActEdit" type="button">编辑场景</button>
+        <button id="sceneActDel" class="danger" type="button">删除场景</button>
+        <button id="sceneActHide" class="danger" type="button">隐藏这个场景</button>
+        <button type="button" data-close>取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+/* 声桥 · 场景包数据
+ * 每个场景 = 一句开场 + 6 条高频话术 + 一段可回放的演示对话
+ * 后续接真机时，这里的 demo 可换成「真实店员语音样本」用于离线演示
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.SQData = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  return {
+  scenarios: [
+    {
+      id: 'dine',
+      name: '点餐',
+      hint: '奶茶 / 咖啡 / 快餐',
+      greeting: '您好，请问要点什么？',
+      quick: ['一杯美式，去冰', '不要糖', '中杯就好', '要等多久', '有优惠吗', '再说一遍'],
+      demo: [
+        { who: 'clerk', text: '您好，请问要点什么？' },
+        { who: 'me',    text: '一杯美式，去冰，谢谢' },
+        { who: 'clerk', text: '美式只有中杯和大杯，大杯加3元，要换大杯吗？' },
+        { who: 'me',    text: '不用，中杯就行' },
+        { who: 'clerk', text: '好的，一共18块，扫码这边，小票要吗？' },
+        { who: 'me',    text: '小票要，谢谢' }
+      ]
+    },
+    {
+      id: 'store',
+      name: '便利店',
+      hint: '结账 / 会员 / 找零',
+      greeting: '要袋子吗？',
+      quick: ['不要袋子', '要一个袋子', '有会员价吗', '一共多少钱', '我扫码付', '再说一遍'],
+      demo: [
+        { who: 'clerk', text: '要袋子吗？' },
+        { who: 'me',    text: '不要袋子，谢谢' },
+        { who: 'clerk', text: '会员卡有吗？可以积分的，办一张吗？' },
+        { who: 'me',    text: '不用了，谢谢' },
+        { who: 'clerk', text: '好的，一共28块5，扫码在这儿' }
+      ]
+    },
+    {
+      id: 'pharm',
+      name: '药店',
+      hint: '用法 / 禁忌 / 医保',
+      greeting: '请问哪里不舒服？',
+      quick: ['这个一天吃几次', '饭前还是饭后', '能和别的药一起吃吗', '有说明书吗', '多少钱', '再说一遍'],
+      demo: [
+        { who: 'clerk', text: '这个一天两次，一次一片，饭后吃，别空腹' },
+        { who: 'me',    text: '和别的药能一起吃吗？' },
+        { who: 'clerk', text: '不要和这个感冒药一起吃，隔开两小时' },
+        { who: 'me',    text: '多少钱？' },
+        { who: 'clerk', text: '这个28块，医保可以刷' }
+      ]
+    },
+    {
+      id: 'hospital',
+      name: '医院',
+      hint: '挂号 / 缴费 / 检查 / 取药',
+      greeting: '您好，请问挂哪个科？',
+      quick: ['我要挂内科', '有医保', '检查在几楼', '这个药怎么吃', '需要空腹吗', '再说一遍'],
+      demo: [
+        { who: 'clerk', text: '您好，请问挂哪个科？' },
+        { who: 'me',    text: '我要挂内科，有医保' },
+        { who: 'clerk', text: '先交20块挂号费，医保卡给我' },
+        { who: 'me',    text: '抽血检查在几楼？' },
+        { who: 'clerk', text: '抽血在二楼，B超在三楼，抽血要空腹' },
+        { who: 'me',    text: '今天能出结果吗？' },
+        { who: 'clerk', text: '下午三点取结果，取完到三楼找医生' }
+      ]
+    },
+    {
+      id: 'refund',
+      name: '退换货',
+      hint: '期限 / 条件 / 承诺',
+      greeting: '您好，有什么可以帮您？',
+      quick: ['我要退货', '有小票', '昨天买的', '这个有质量问题', '能换一个吗', '找一下店长'],
+      demo: [
+        { who: 'clerk', text: '这个买了多久了？' },
+        { who: 'me',    text: '昨天买的，有小票' },
+        { who: 'clerk', text: '三天内可以退，要小票，包装别拆' },
+        { who: 'me',    text: '包装拆了还能退吗？' },
+        { who: 'clerk', text: '拆了只能换，不能退；特价的不能退' }
+      ]
+    },
+    {
+      id: 'salon',
+      name: '理发美业',
+      hint: '价格 / 办卡 / 套餐',
+      greeting: '您好，剪头发吗？',
+      quick: ['就剪头发', '不办卡', '多少钱', '不要套餐', '剪短一点', '再说一遍'],
+      demo: [
+        { who: 'clerk', text: '剪短一点还是修一下？' },
+        { who: 'me',    text: '就剪短一点，不办卡' },
+        { who: 'clerk', text: '办张卡吧，充500送100，很划算的' },
+        { who: 'me',    text: '不用了，谢谢，就剪头发' },
+        { who: 'clerk', text: '那今天有活动，烫染套餐8折，要不要试试？' }
+      ]
+    },
+    {
+      id: 'route',
+      name: '问路打车',
+      hint: '方位 / 距离 / 车费',
+      greeting: '您要去哪儿？',
+      quick: ['地铁站怎么走', '打车到这儿多少钱', '左转还是右转', '走多久', '再说一遍', '谢谢'],
+      demo: [
+        { who: 'clerk', text: '前面路口右转，走两百米，大概5分钟' },
+        { who: 'me',    text: '打车过去大概多少钱？' },
+        { who: 'clerk', text: '打车20块左右，十几分钟' }
+      ]
+    }
+  ],
+
+  /* 风险话术库：对方一说到这些词，就弹出大字提示 + 拒绝话术 */
+  risks: [
+    {
+      id: 'prepaid',
+      words: ['办卡', '充值', '储值', '预付费', '预付卡', '充值卡', '会员费', '服务费', '充500', '送100'],
+      tip: '对方在推预付费/充值：钱先付、服务后给，商家关门就很难追回。',
+      refuse: '不用了，谢谢，我不办卡也不充值'
+    },
+    {
+      id: 'deposit',
+      words: ['押金', '定金', '订金'],
+      tip: '提到押金/定金：先问清「什么情况退、多久退、退到哪」。',
+      refuse: '押金可以退吗？什么情况退、多久退，请写在小票上'
+    },
+    {
+      id: 'selfpay',
+      words: ['自费', '全自费', '自费项目', '医保不报'],
+      tip: '涉及自费项目：先确认医保能不能报、自己要出多少钱。',
+      refuse: '这个能走医保吗？自费的话一共多少钱？'
+    },
+    {
+      id: 'autorenew',
+      words: ['自动续费', '连续包月', '免密支付', '自动扣款'],
+      tip: '涉及自动续费：确认下次扣款时间，以及在哪里取消。',
+      refuse: '不要自动续费，我只要这一次'
+    },
+    {
+      id: 'loan',
+      words: ['分期', '贷款', '免息', '首付'],
+      tip: '提到分期/贷款：问清手续费，以及是否会上征信。',
+      refuse: '不分期，我一次付清'
+    },
+    {
+      id: 'noreturn',
+      words: ['特价不退', '不退不换', '概不退换', '概不退款', '概不退还', '售出不退', '不能退', '不予退换'],
+      tip: '「不退不换」不一定合法：让对方写明理由，并保留这条凭证。',
+      refuse: '请把不能退的原因写在小票上，我拍个照'
+    }
+  ]
+  };
+});
+
+</script>
+<script>
+/* 声桥 · 纯逻辑层（浏览器 / Node 通用）
+ * 职责：从一句店员的话里抽出「可确认的事实」，识别风险话术，生成凭证文本
+ * 设计原则：抽不到就留空，绝不猜测 —— 字幕可以模糊，确认卡必须准确
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.SQLogic = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var NUM = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 };
+
+  function cnNum(s) {
+    if (s == null) return '';
+    s = String(s).trim();
+    if (/^\d+(\.\d+)?$/.test(s)) return s;
+    if (NUM.hasOwnProperty(s)) return String(NUM[s]);
+    if (s === '十') return '10';
+    var m;
+    if ((m = s.match(/^十([一二三四五六七八九])$/))) return String(10 + NUM[m[1]]);
+    if ((m = s.match(/^([一二两三四五六七八九])十$/))) return String(NUM[m[1]] * 10);
+    if ((m = s.match(/^([一二两三四五六七八九])十([一二三四五六七八九])$/))) {
+      return String(NUM[m[1]] * 10 + NUM[m[2]]);
+    }
+    return s;
+  }
+
+  var SPEC_WORDS = ['去冰', '少冰', '多冰', '常温', '热饮', '热的', '大杯', '中杯', '小杯',
+    '加糖', '无糖', '半糖', '三分糖', '五分糖', '七分糖', '微辣', '中辣', '不辣'];
+
+  var COND_WORDS = ['小票', '包装', '未拆封', '特价', '会员', '扫码', '现金', '线上', '发票'];
+
+  function extractFacts(text) {
+    var t = String(text || '');
+    var facts = [];
+
+    function push(label, value) {
+      if (!value) return;
+      for (var i = 0; i < facts.length; i++) {
+        if (facts[i].label === label && facts[i].value === value) return;
+      }
+      facts.push({ label: label, value: value });
+    }
+
+    function take(re, cb) {
+      var m = t.match(re);
+      if (!m) return false;
+      cb(m);
+      t = t.replace(m[0], ' ');
+      return true;
+    }
+
+    // 1) 加价换购：「加3元可以换燕麦奶」
+    take(/加\s*(\d+(?:\.\d+)?)\s*(?:元|块)\s*(?:可以|能|可)?\s*(?:换|升级成|升级为|升级)\s*([^\s，。？?！!、；;]{1,10})/,
+      function (m) { push('加价', '+' + m[1] + ' 元 → ' + m[2]); });
+    // 2) 普通加价
+    take(/加\s*(\d+(?:\.\d+)?)\s*(?:元|块)/, function (m) { push('加价', '+' + m[1] + ' 元'); });
+    // 3) 「28块5」→ 28.5 元
+    take(/(\d+)\s*块\s*(\d)(?!\d)/, function (m) { push('金额', m[1] + '.' + m[2] + ' 元'); });
+    // 4) 带关键词的金额
+    take(/(?:一共|总共|共|收您|是|要)\s*(\d+(?:\.\d+)?)\s*(?:元|块)/,
+      function (m) { push('金额', m[1] + ' 元'); });
+    // 5) 兜底金额
+    take(/(\d+(?:\.\d+)?)\s*(?:元|块钱)/, function (m) { push('金额', m[1] + ' 元'); });
+    if (!facts.some(function (f) { return f.label === '金额'; })) {
+      take(/(\d+(?:\.\d+)?)\s*块/, function (m) { push('金额', m[1] + ' 元'); });
+    }
+
+    // 6) 用药频次 / 用量（必须先于「期限」，否则「一天两次」会被当成 1 天）
+    take(/(一天|每天)\s*([一二两三四五六七八九\d]+)\s*次/,
+      function (m) { push('频次', cnNum(m[2]) + ' 次 / 天'); });
+    take(/一次\s*([一二两三四五六七八九\d.]+)\s*(片|粒|袋|支|毫升|ml)/,
+      function (m) { push('用量', '一次 ' + cnNum(m[1]) + ' ' + m[2]); });
+
+    // 7) 期限：「三天内」「7天内」「一个月」
+    take(/([\d一二两三四五六七八九十]+)\s*(?:天|日)(?:之内|以内|内)?/,
+      function (m) { push('期限', cnNum(m[1]) + ' 天'); });
+    take(/([\d一二两三四五六七八九十]+)\s*个月/, function (m) { push('期限', cnNum(m[1]) + ' 个月'); });
+
+    // 8) 等待时间
+    take(/(?:等|大概|需要|要)\s*([\d一二两三四五六七八九十]+)\s*分钟/,
+      function (m) { push('等待', '约 ' + cnNum(m[1]) + ' 分钟'); });
+
+    // 8.1) 楼层（医院 / 商场常见）
+    var floors = t.match(/([\d一二两三四五六七八九十]+)\s*(?:楼|层)/g) || [];
+    floors.forEach(function (f) {
+      var n = f.match(/([\d一二两三四五六七八九十]+)/);
+      if (n) push('楼层', cnNum(n[1]) + ' 楼');
+    });
+
+    // 9) 服用时段
+    var meal = t.match(/饭前|饭后|空腹|睡前|随餐/);
+    if (meal) push('时间', meal[0]);
+
+    // 10) 规格
+    SPEC_WORDS.forEach(function (w) { if (t.indexOf(w) >= 0) push('规格', w); });
+
+    // 11) 数量
+    var qty = t.match(/([\d一二两三四五六七八九十]+)\s*(个|杯|件|盒|瓶|份|张|袋)/);
+    if (qty) push('数量', cnNum(qty[1]) + ' ' + qty[2]);
+
+    // 12) 条件
+    COND_WORDS.forEach(function (w) { if (t.indexOf(w) >= 0) push('条件', w); });
+
+    // 13) 承诺
+    var promise = t.match(/包退|包换|可以退|可退|能换|七天无理由|三包/);
+    if (promise) push('承诺', promise[0]);
+
+    return facts;
+  }
+
+  function detectRisks(text, riskList) {
+    var out = [];
+    var list = riskList || (typeof window !== 'undefined' && window.SQData ? window.SQData.risks : []) || [];
+    var t = String(text || '');
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      for (var j = 0; j < r.words.length; j++) {
+        if (t.indexOf(r.words[j]) >= 0) {
+          out.push({ id: r.id, tip: r.tip, refuse: r.refuse, word: r.words[j] });
+          break;
+        }
+      }
+    }
+    return out;
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function highlight(text) {
+    var s = escapeHtml(text);
+    // 金额
+    s = s.replace(/(\d+(?:\.\d+)?)\s*(?:元|块钱|块\d)/g, '<mark class="hl">$&</mark>');
+    // 期限
+    s = s.replace(/([\d一二两三四五六七八九十]+)\s*(?:天|日)(?:之内|以内|内)?/g, '<mark class="hl">$&</mark>');
+    // 规格
+    s = s.replace(new RegExp('(' + SPEC_WORDS.join('|') + ')', 'g'), '<mark class="hl">$1</mark>');
+    // 风险词
+    var risks = (typeof window !== 'undefined' && window.SQData) ? window.SQData.risks : [];
+    risks.forEach(function (r) {
+      r.words.forEach(function (w) {
+        if (!w) return;
+        var safe = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        s = s.replace(new RegExp(safe, 'g'), '<mark class="hl">' + w + '</mark>');
+      });
+    });
+    return s;
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function fmtTime(ts) {
+    var d = new Date(ts || Date.now());
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function fmtDateTime(ts) {
+    var d = new Date(ts || Date.now());
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + fmtTime(ts);
+  }
+
+  function groupFactsForText(facts) {
+    var seen = {}, order = [], grouped = {};
+    (facts || []).forEach(function (f) {
+      var k = f.label + '|' + f.value;
+      if (seen[k]) return;
+      seen[k] = 1;
+      if (!grouped[f.label]) { grouped[f.label] = { values: [], status: 'pending' }; order.push(f.label); }
+      var g = grouped[f.label];
+      if (g.values.indexOf(f.value) < 0) g.values.push(f.value);
+      if (f.status === 'doubt') g.status = 'doubt';
+      else if (f.status === 'ok' && g.status !== 'doubt') g.status = 'ok';
+    });
+    return order.map(function (label) {
+      return { label: label, values: grouped[label].values, status: grouped[label].status };
+    });
+  }
+
+  function receiptText(r) {
+    if (!r) return '';
+    var lines = [];
+    lines.push('声桥 · 沟通凭证');
+    lines.push('场景：' + (r.scene || '—'));
+    lines.push('时间：' + fmtDateTime(r.start) + (r.end ? ' — ' + fmtTime(r.end) : ''));
+    lines.push('');
+    lines.push('【确认过的信息】');
+    var seen = {};
+    var facts = (r.facts || []).filter(function (f) {
+      var k = f.label + '|' + f.value;
+      if (seen[k]) return false;
+      seen[k] = 1;
+      return true;
+    });
+    if (facts.length) {
+      // 同一类信息合并成一行，例如「规格：大杯 / 中杯」
+      var order = [], grouped = {};
+      facts.forEach(function (f) {
+        if (!grouped[f.label]) { grouped[f.label] = { values: [], status: 'pending' }; order.push(f.label); }
+        var g = grouped[f.label];
+        if (g.values.indexOf(f.value) < 0) g.values.push(f.value);
+        if (f.status === 'doubt') g.status = 'doubt';
+        else if (f.status === 'ok' && g.status !== 'doubt') g.status = 'ok';
+      });
+      order.forEach(function (label) {
+        var g = grouped[label];
+        var sym = g.status === 'ok' ? '✓' : (g.status === 'doubt' ? '？' : '·');
+        lines.push('· ' + sym + ' ' + label + '：' + g.values.join(' / '));
+      });
+    } else {
+      lines.push('· 无');
+    }
+    lines.push('');
+    lines.push('【风险提示】');
+    if (r.risks && r.risks.length) {
+      r.risks.forEach(function (x) { lines.push('· ' + x.tip); });
+    } else {
+      lines.push('· 无');
+    }
+    lines.push('');
+    lines.push('【对话记录】');
+    (r.lines || []).forEach(function (l) {
+      lines.push('[' + (l.who === 'clerk' ? '店员' : '我') + ' ' + fmtTime(l.at) + '] ' + l.text);
+    });
+    lines.push('');
+    lines.push('说明：本凭证由「声桥」在本机生成，仅作沟通记录参考；原音不会保存。');
+    return lines.join('\n');
+  }
+
+  /**
+   * 快捷话术排序：用得多 → 排左边；次数相同 → 自定义的优先（新加的在前），内置的保持原顺序
+   * @param {Array<{text:string, idx?:number, custom?:boolean, at?:number}>} items
+   * @param {Object<string, number>} usage 各句使用次数
+   */
+  function orderPhrases(items, usage) {
+    usage = usage || {};
+    var out = items.slice().map(function (it, i) {
+      var o = { text: it.text, custom: !!it.custom, idx: it.idx == null ? i : it.idx, at: it.at || 0 };
+      o.u = usage[o.text] || 0;
+      return o;
+    });
+    out.sort(function (a, b) {
+      if (a.u !== b.u) return b.u - a.u;
+      if (a.custom !== b.custom) return a.custom ? -1 : 1;
+      if (a.custom && b.custom) return b.at - a.at;
+      return a.idx - b.idx;
+    });
+    return out.map(function (o) { return o.text; });
+  }
+
+  /**
+   * 组装词组条：全局（固定最左）→ 本场景置顶（按置顶顺序）→ 其余（手动顺序优先，其次使用次数）
+   * @param {Array<{text:string, idx?:number, custom?:boolean, at?:number}>} items 本场景全部词组
+   * @param {Object<string, number>} usage 本场景各句使用次数
+   * @param {{global?: Array<{text:string}>, pins?: string[], order?: string[]}} opts
+   */
+  function composeQuick(items, usage, opts) {
+    opts = opts || {};
+    var texts = {};
+    items.forEach(function (it) { texts[it.text] = 1; });
+
+    var globalTexts = (opts.global || []).map(function (g) { return g.text; })
+      .filter(function (t) { return t; });
+    var gset = {};
+    globalTexts.forEach(function (t) { gset[t] = 1; });
+
+    var pinned = (opts.pins || []).filter(function (t) {
+      return t && texts[t] && !gset[t];
+    });
+    var pset = {};
+    pinned.forEach(function (t) { pset[t] = 1; });
+
+    var rest = items.filter(function (it) { return !gset[it.text] && !pset[it.text]; });
+    var restTexts = orderPhrases(rest, usage);
+
+    // 手动拖动过的顺序优先，未出现在手动顺序里的按次数排在后面
+    var manual = (opts.order || []).filter(function (t) { return t; });
+    if (manual.length) {
+      var avail = {};
+      restTexts.forEach(function (t) { avail[t] = 1; });
+      var used = {}, front = [];
+      manual.forEach(function (t) {
+        if (avail[t] && !used[t]) { used[t] = 1; front.push(t); }
+      });
+      restTexts = front.concat(restTexts.filter(function (t) { return !used[t]; }));
+    }
+
+    return globalTexts.concat(pinned, restTexts);
+  }
+
+  /**
+   * 从一句广播/叫号里解析号码与窗口
+   * 「请38号到2号窗口」「十五号窗口」「A023号，请到3号诊室」
+   * @returns {{no:string, where:string, raw:string}|null}
+   */
+  function parseQueue(text) {
+    var t = String(text || '').replace(/\s+/g, '');
+    if (!t || t.indexOf('号') < 0) return null;
+
+    var NUM = '([A-Za-z]?\\d{1,4}|[一二三四五六七八九十百]{1,6})';
+    var GATE = '(窗口|窗|诊室|诊台|台|床|柜台|取药口)';
+    var floor = '(?:[一二三四五六七八九十\\d]{1,3}楼)?';
+
+    function norm(s) {
+      if (!s) return '';
+      if (/^[A-Za-z]?\d+$/.test(s)) return s.toUpperCase();
+      var n = cnNum(s);
+      return /^[A-Za-z]?\d+$/.test(n) ? n : s;
+    }
+
+    // ① 号码 → 到 → 窗口
+    var m = t.match(new RegExp(NUM + '号?.{0,10}?到' + floor + NUM + '号?' + GATE));
+    if (m) return { no: norm(m[1]), where: norm(m[2]) + ' 号' + m[3], raw: text };
+
+    // ② 只有窗口号（「2号窗口」）
+    m = t.match(new RegExp(floor + NUM + '号?' + GATE));
+    if (m) return { no: '', where: norm(m[1]) + ' 号' + m[2], raw: text };
+
+    // ③ 单纯叫号（排除 3号线 / 3号楼 这类地址）
+    m = t.match(new RegExp(NUM + '号(?!线|楼|门)'));
+    if (m) return { no: norm(m[1]), where: '', raw: text };
+
+    return null;
+  }
+
+  /** 把某个元素和相邻元素交换位置（越界原样返回） */
+  function moveItem(list, item, dir) {
+    var i = (list || []).indexOf(item);
+    if (i < 0) return (list || []).slice();
+    var j = i + dir;
+    if (j < 0 || j >= list.length) return list.slice();
+    var out = list.slice();
+    out[i] = list[j];
+    out[j] = item;
+    return out;
+  }
+
+  /** 把某个元素移到最前 */
+  function moveToFront(list, item) {
+    var i = (list || []).indexOf(item);
+    if (i <= 0) return (list || []).slice();
+    var out = list.slice();
+    out.splice(i, 1);
+    out.unshift(item);
+    return out;
+  }
+
+  /**
+   * 场景排序与隐藏：手动顺序优先，没排过的保持原顺序排在后面；隐藏的不出现
+   * @param {Array<{id:string}>} scenes
+   * @param {{order?: string[], hidden?: string[]}} opts
+   */
+  function orderScenes(scenes, opts) {
+    opts = opts || {};
+    var hidden = opts.hidden || [];
+    var order = opts.order || [];
+    var pos = {};
+    order.forEach(function (id, i) { if (!(id in pos)) pos[id] = i; });
+    return scenes.map(function (s, i) { return { s: s, i: i }; })
+      .filter(function (x) { return hidden.indexOf(x.s.id) < 0; })
+      .sort(function (a, b) {
+        var pa = a.s.id in pos ? pos[a.s.id] : null;
+        var pb = b.s.id in pos ? pos[b.s.id] : null;
+        if (pa === null && pb === null) return a.i - b.i;
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pa - pb;
+      })
+      .map(function (x) { return x.s; });
+  }
+
+  /**
+   * 校验「导入设置」的 JSON：只接受白名单键
+   * @returns {{ok:boolean, data:Object|null, error:string}}
+   */
+  function parseSettings(json) {
+    var out = { ok: false, data: null, error: '' };
+    if (!json || !String(json).trim()) { out.error = '还没有粘贴内容'; return out; }
+    var obj;
+    try { obj = JSON.parse(json); } catch (e) { out.error = '不是合法的设置文本'; return out; }
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) { out.error = '格式不对，需要一整个对象'; return out; }
+    var allowed = ['sq-phrase-prefs', 'sq-custom-scenes', 'sq-scene-order', 'sq-scene-hidden', 'sq-fs', 'sq-sos-phone', 'sq-hint-phrase'];
+    var data = {};
+    allowed.forEach(function (k) { if (Object.prototype.hasOwnProperty.call(obj, k)) data[k] = obj[k]; });
+    if (!Object.keys(data).length) { out.error = '里面没有可导入的设置'; return out; }
+    out.ok = true;
+    out.data = data;
+    return out;
+  }
+
+  /** 把一次沟通整理成投诉 / 维权文本（可直接复制给 12315、平台客服、店长） */
+  function complaintText(r) {
+    if (!r) return '';
+    var lines = [];
+    lines.push('投诉 / 维权说明（声桥生成）');
+    lines.push('时间：' + fmtDateTime(r.start));
+    lines.push('场景：' + (r.scene || '—'));
+    lines.push('门店：________（请补上门店名称 / 地址）');
+    lines.push('');
+    lines.push('【事情经过】');
+    if (r.lines && r.lines.length) {
+      r.lines.forEach(function (l) {
+        lines.push('· ' + (l.who === 'clerk' ? '对方说：' : '我说：') + l.text);
+      });
+    } else {
+      lines.push('· （无对话记录）');
+    }
+    lines.push('');
+    lines.push('【我确认到的信息】');
+    var facts = groupFactsForText(r.facts);
+    if (facts.length) {
+      facts.forEach(function (f) { lines.push('· ' + f.label + '：' + f.values.join(' / ')); });
+    } else {
+      lines.push('· 无');
+    }
+    lines.push('');
+    if (r.risks && r.risks.length) {
+      lines.push('【风险提示】');
+      var seen = {};
+      r.risks.forEach(function (x) {
+        if (seen[x.tip]) return;
+        seen[x.tip] = 1;
+        lines.push('· ' + x.tip);
+      });
+      lines.push('');
+    }
+    lines.push('【我的诉求】');
+    lines.push('请按上述承诺办理退换 / 退款；如无法办理，请给出书面说明。');
+    lines.push('');
+    lines.push('说明：本人是听障人士，无法电话沟通，请通过短信或微信文字与我联系。');
+    return lines.join('\n');
+  }
+
+  return {
+    cnNum: cnNum,
+    extractFacts: extractFacts,
+    detectRisks: detectRisks,
+    escapeHtml: escapeHtml,
+    highlight: highlight,
+    fmtTime: fmtTime,
+    fmtDateTime: fmtDateTime,
+    receiptText: receiptText,
+    complaintText: complaintText,
+    parseQueue: parseQueue,
+    parseSettings: parseSettings,
+    orderPhrases: orderPhrases,
+    composeQuick: composeQuick,
+    orderScenes: orderScenes,
+    moveItem: moveItem,
+    moveToFront: moveToFront
+  };
+});
+
+
+</script>
+<script>
+/* 声桥 · 交互层
+ * 首页 → 对话（字幕 / 确认卡 / 快问 / 播报 / 递屏 / 风险提示）→ 凭证
+ * 语音识别用浏览器内置能力；不可用时自动降级为「演示模式 + 打字」
+ */
+(function () {
+  'use strict';
+
+  var L = window.SQLogic;
+  var D = window.SQData;
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  var state = {
+    scenario: null,
+    lines: [],
+    facts: [],
+    risks: [],
+    suggestions: [],
+    cards: 0,
+    startedAt: 0,
+    listening: false,
+    rec: null,
+    demo: false,
+    demoTimer: null,
+    interimEl: null,
+    lastMine: '',
+    fs: 'm',
+    wake: null,
+    receipt: null
+  };
+
+  /* ---------------- 基础工具 ---------------- */
+  function toast(msg, ms) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove('show'); }, ms || 2600);
+  }
+
+  function buzz(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+  }
+
+  function show(view) {
+    ['home', 'talk', 'call', 'receipt'].forEach(function (v) {
+      var el = $('#view-' + v);
+      if (el) el.classList.toggle('is-active', v === view);
+    });
+  }
+
+  function scrollBottom() {
+    var box = $('#captions');
+    requestAnimationFrame(function () { box.scrollTop = box.scrollHeight; });
+  }
+
+  // 同一类信息合并成一行（规格：大杯 / 中杯），避免确认卡变成流水账
+  function groupFacts(facts) {
+    var order = [], map = {};
+    facts.forEach(function (f) {
+      if (!map[f.label]) { map[f.label] = { values: [], status: 'pending' }; order.push(f.label); }
+      var g = map[f.label];
+      if (g.values.indexOf(f.value) < 0) g.values.push(f.value);
+      if (f.status === 'doubt') g.status = 'doubt';
+      else if (f.status === 'ok' && g.status !== 'doubt') g.status = 'ok';
+    });
+    return order.map(function (label) {
+      return { label: label, value: map[label].values.join(' / '), status: map[label].status };
+    });
+  }
+
+  function setLive(text, on) {
+    $('#liveText').textContent = text;
+    $('#liveDot').classList.toggle('on', !!on);
+  }
+
+  /* ---------------- 语音播报 ---------------- */
+  var voices = [];
+  function loadVoices() {
+    try { voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : []; } catch (e) { voices = []; }
+  }
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickVoice() {
+    var zh = voices.filter(function (v) { return /^zh/i.test(v.lang || ''); });
+    var prefer = zh.filter(function (v) {
+      return /Xiaoxiao|Xiaoyi|Yunxi|Yunyang|Huihui|Yaoyao|Tingting|Kangkang|Google 普通话/i.test(v.name || '');
+    });
+    return prefer[0] || zh[0] || null;
+  }
+
+  var speechFailed = false;
+  function speak(text, opts) {
+    opts = opts || {};
+    if (!('speechSynthesis' in window)) {
+      if (!speechFailed) { speechFailed = true; toast('这个浏览器不支持语音播报，直接把屏幕给对方看就行'); }
+      return;
+    }
+    var synth = window.speechSynthesis;
+    function run(attempt) {
+      try {
+        loadVoices();
+        synth.cancel();
+        var u = new SpeechSynthesisUtterance(String(text));
+        var v = pickVoice();
+        if (v) { u.voice = v; u.lang = v.lang || 'zh-CN'; } else { u.lang = 'zh-CN'; }
+        u.rate = opts.rate || 0.95;
+        u.pitch = 1;
+        u.volume = 1;
+        u.onerror = function (ev) {
+          var why = ev && ev.error;
+          if (why === 'interrupted' || why === 'canceled') return;
+          if (attempt < 2) { setTimeout(function () { run(attempt + 1); }, 600); return; }
+          if (!speechFailed) { speechFailed = true; toast('这台设备没有可用的中文语音，直接把屏幕给对方看就行'); }
+        };
+        synth.speak(u);
+        // Chrome 有时会卡在 paused，叫醒一下
+        setTimeout(function () { try { if (synth.paused) synth.resume(); } catch (e) {} }, 120);
+        if (attempt === 0 && !voices.length) {
+          setTimeout(function () { if (!voices.length) run(1); }, 700);
+        }
+      } catch (e) {
+        if (attempt < 2) { setTimeout(function () { run(attempt + 1); }, 600); return; }
+        if (!speechFailed) { speechFailed = true; toast('语音播报不可用，直接把屏幕给对方看就行'); }
+      }
+    }
+    run(0);
+  }
+
+  /* ---------------- 屏幕常亮 ---------------- */
+  function keepAwake() {
+    try {
+      if ('wakeLock' in navigator && !state.wake) {
+        navigator.wakeLock.request('screen').then(function (lock) {
+          state.wake = lock;
+          lock.addEventListener('release', function () { state.wake = null; });
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  function releaseAwake() {
+    try { if (state.wake) { state.wake.release(); state.wake = null; } } catch (e) {}
+  }
+
+  /* ---------------- 自定义场景（存在本机） ---------------- */
+  var CUSTOM_KEY = 'sq-custom-scenes';
+  var DEFAULT_QUICK = ['再说一遍', '多少钱', '可以吗', '谢谢'];
+  var editingId = '';
+
+  function normalizeCustom(s) {
+    var quick = (s.quick || []).map(function (x) { return String(x).trim(); }).filter(Boolean).slice(0, 6);
+    return {
+      id: s.id,
+      name: String(s.name || '').trim().slice(0, 10) || '我的场景',
+      hint: String(s.hint || '').trim().slice(0, 20) || '自定义',
+      greeting: String(s.greeting || '').trim().slice(0, 30) || '您好，请问需要什么？',
+      quick: quick.length ? quick : DEFAULT_QUICK.slice(),
+      custom: true
+    };
+  }
+
+  function loadCustom() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(function (s) { return s && s.id && s.name; }).map(normalizeCustom);
+    } catch (e) { return []; }
+  }
+
+  function saveCustom(list) {
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  function allScenarios() { return D.scenarios.concat(loadCustom()); }
+
+  /* ---------------- 场景顺序 / 隐藏 ---------------- */
+  var SCENE_ORDER_KEY = 'sq-scene-order';
+  var SCENE_HIDE_KEY = 'sq-scene-hidden';
+
+  function loadSceneOrder() {
+    try { return JSON.parse(localStorage.getItem(SCENE_ORDER_KEY) || '[]') || []; } catch (e) { return []; }
+  }
+  function saveSceneOrder(list) {
+    try { localStorage.setItem(SCENE_ORDER_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function loadHidden() {
+    try { return JSON.parse(localStorage.getItem(SCENE_HIDE_KEY) || '[]') || []; } catch (e) { return []; }
+  }
+  function saveHidden(list) {
+    try { localStorage.setItem(SCENE_HIDE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function visibleScenes() {
+    return L.orderScenes(allScenarios(), { order: loadSceneOrder(), hidden: loadHidden() });
+  }
+
+  /* ---------------- 首页 ---------------- */
+  function renderScenes() {
+    var list = visibleScenes();
+    var html = list.map(function (s) {
+      if (s.custom) {
+        return '<div class="scene has-actions" data-id="' + s.id + '" role="button" tabindex="0">' +
+          '<span class="scene-tag">自定义</span>' +
+          '<span class="scene-name">' + L.escapeHtml(s.name) + '</span>' +
+          '<span class="scene-hint">' + L.escapeHtml(s.hint) + '</span>' +
+          '<button class="scene-edit" type="button" aria-label="编辑这个场景">✎</button>' +
+          '</div>';
+      }
+      return '<button class="scene" data-id="' + s.id + '">' +
+        '<span class="scene-name">' + L.escapeHtml(s.name) + '</span>' +
+        '<span class="scene-hint">' + L.escapeHtml(s.hint) + '</span>' +
+        '</button>';
+    }).join('');
+    var addWide = (list.length + 1) % 2 === 1;
+    html += '<button class="scene scene-add' + (addWide ? ' wide' : '') + '" type="button" data-add="1">' +
+      '<span class="plus">＋</span><span class="scene-hint">自定义场景</span></button>';
+    $('#scenes').innerHTML = html;
+
+    var hidden = loadHidden().length;
+    $('#btnRestore').hidden = hidden === 0;
+    if (hidden) $('#btnRestore').textContent = '恢复隐藏的场景（' + hidden + '）';
+  }
+
+  /* ---------------- 场景长按：拖动排序 / 删除 / 隐藏 ---------------- */
+  var sceneActId = '';
+
+  function openSceneAction(id) {
+    var s = allScenarios().filter(function (x) { return x.id === id; })[0];
+    if (!s) return;
+    sceneActId = id;
+    $('#sceneActionTitle').textContent = s.name;
+    $('#sceneActionSub').textContent = s.custom
+      ? '按住卡片拖动可以换位置；也可以编辑或删除它。'
+      : '按住卡片拖动可以换位置；也可以把它从首页隐藏。';
+    $('#sceneActEdit').hidden = !s.custom;
+    $('#sceneActDel').hidden = !s.custom;
+    $('#sceneActHide').hidden = !!s.custom;
+    openSheet($('#sceneAction'));
+  }
+
+  /* ---------------- 开场 ---------------- */
+  function start(id, opts) {
+    opts = opts || {};
+    var sc = allScenarios().filter(function (s) { return s.id === id; })[0];
+    if (!sc) sc = D.scenarios[0];
+
+    stopDemo();
+    stopMic();
+    state.scenario = sc;
+    state.lines = [];
+    state.facts = [];
+    state.risks = [];
+    state.suggestions = [];
+    state.cards = 0;
+    state.receipt = null;
+    state.lastMine = '';
+    state.startedAt = Date.now();
+
+    $('#sceneName').textContent = sc.name + '模式';
+    $('#captions').innerHTML = '';
+    $('#myInput').value = '';
+    hideRisk();
+    renderQuick();
+    show('talk');
+    keepAwake();
+    setLive(SR ? '点麦克风开始收音，或直接点下面的词组' : '当前浏览器不支持实时收音，可点「演示」或直接打字');
+
+    if (!opts.skipGreeting) addLine('clerk', sc.greeting, { silent: true });
+
+    if (!SR && !opts.quiet) {
+      toast('这个浏览器不支持语音识别：可以看演示，或者直接打字/点词组', 4200);
+    }
+
+    // 第一次进来提示一下词组条的玩法（只提示一次）
+    try {
+      if (!localStorage.getItem('sq-hint-phrase')) {
+        localStorage.setItem('sq-hint-phrase', '1');
+        setTimeout(function () { toast('长按词组可置顶，按住左右拖动可排序；点右边 ＋ 加常用语', 4800); }, 1200);
+      }
+    } catch (e) {}
+  }
+
+  /* ---------------- 消息 ---------------- */
+  function addLine(who, text, opts) {
+    opts = opts || {};
+    var line = { who: who, text: text, at: Date.now() };
+    state.lines.push(line);
+
+    var el = document.createElement('div');
+    el.className = 'msg ' + (who === 'clerk' ? 'clerk' : 'me');
+    el.innerHTML =
+      '<div class="msg-meta"><span>' + (who === 'clerk' ? '店员说' : '我说') + '</span><time>' + L.fmtTime(line.at) + '</time></div>' +
+      '<div class="msg-text">' + L.highlight(text) + '</div>' +
+      (who === 'me' ? '<button class="replay" type="button">🔊 再播报</button>' : '');
+
+    if (who === 'me') {
+      el.querySelector('.replay').addEventListener('click', function () { speak(text); });
+      state.lastMine = text;
+    }
+
+    $('#captions').appendChild(el);
+    scrollBottom();
+
+    if (who === 'clerk') {
+      if (!opts.silent) buzz(16);
+      analyze(text);
+    } else {
+      if (!opts.silent) speak(text);
+    }
+    return el;
+  }
+
+  function analyze(text) {
+    var facts = L.extractFacts(text);
+    if (facts.length) {
+      var objs = facts.map(function (f) { return { label: f.label, value: f.value, status: 'pending' }; });
+      objs.forEach(function (o) { state.facts.push(o); });
+      renderCard(objs);
+    }
+    var risks = L.detectRisks(text);
+    if (risks.length) showRisk(risks);
+  }
+
+  /* ---------------- 确认卡 ---------------- */
+  function renderCard(facts) {
+    state.cards++;
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div class="card-head"><span class="card-tag">确认卡</span><span class="card-src">来自对方的原话</span></div>' +
+      '<ul class="card-list">' + groupFacts(facts).map(function (f) {
+        return '<li><span class="k">' + L.escapeHtml(f.label) + '</span><span class="v">' + L.escapeHtml(f.value) + '</span></li>';
+      }).join('') + '</ul>' +
+      '<div class="card-actions">' +
+        '<button class="ok" type="button">都对</button>' +
+        '<button class="no" type="button">不对，重问</button>' +
+      '</div>';
+
+    card.querySelector('.ok').addEventListener('click', function () {
+      facts.forEach(function (f) { f.status = 'ok'; });
+      card.classList.add('done');
+      card.querySelector('.card-actions').innerHTML = '<span class="done-tip">已确认 ✓</span>';
+      buzz(28);
+      toast('已记下，结束时可以生成凭证');
+    });
+
+    card.querySelector('.no').addEventListener('click', function () {
+      facts.forEach(function (f) { f.status = 'doubt'; });
+      card.classList.add('doubt');
+      var q = '不好意思，我可能听错了，请再说一遍：' + facts.map(function (f) { return f.value; }).join('、');
+      addSuggestion(q);
+      toast('已把要问的话放进上面的词组，点一下就会播报');
+    });
+
+    $('#captions').appendChild(card);
+    scrollBottom();
+    buzz(22);
+  }
+
+  /* ---------------- 风险提示 ---------------- */
+  function showRisk(risks) {
+    risks.forEach(function (r) { state.risks.push(r); });
+    var r = risks[0];
+    var el = $('#risk');
+    el.hidden = false;
+    el.innerHTML =
+      '<div class="risk-tag">⚠ 风险提示 · 对方提到「' + L.escapeHtml(r.word) + '」</div>' +
+      '<div class="risk-text">' + L.escapeHtml(r.tip) + '</div>' +
+      '<div class="risk-actions">' +
+        '<button class="risk-no" type="button">' + L.escapeHtml(r.refuse) + '</button>' +
+        '<button class="risk-ok" type="button">知道了</button>' +
+      '</div>';
+    el.querySelector('.risk-no').addEventListener('click', function () {
+      sendMine(r.refuse);
+      hideRisk();
+    });
+    el.querySelector('.risk-ok').addEventListener('click', hideRisk);
+    buzz([12, 70, 12]);
+  }
+  function hideRisk() { var el = $('#risk'); el.hidden = true; el.innerHTML = ''; }
+
+  /* ---------------- 快捷话术 ---------------- */
+  /* ---------------- 快捷话术：偏好排序 + 置顶 + 自定义常用语 ---------------- */
+  var PREF_KEY = 'sq-phrase-prefs';
+
+  function loadPrefs() {
+    try {
+      var o = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+      return {
+        usage: o.usage || {},
+        custom: o.custom || {},
+        global: o.global || [],
+        gusage: o.gusage || {},
+        pins: o.pins || {},
+        order: o.order || {}
+      };
+    } catch (e) {
+      return { usage: {}, custom: {}, global: [], gusage: {}, pins: {}, order: {} };
+    }
+  }
+  function savePrefs(p) {
+    try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  function normalizeList(arr) {
+    return (arr || []).map(function (x) {
+      return typeof x === 'string' ? { text: x, at: 0 } : x;
+    }).filter(function (x) { return x && x.text; });
+  }
+  function getCustomPhrases(sceneId) {
+    return normalizeList(loadPrefs().custom[sceneId] || []);
+  }
+  function setCustomPhrases(sceneId, list) {
+    var p = loadPrefs();
+    p.custom[sceneId] = list;
+    savePrefs(p);
+  }
+  function getGlobalPhrases() {
+    return normalizeList(loadPrefs().global);
+  }
+  function setGlobalPhrases(list) {
+    var p = loadPrefs();
+    p.global = list;
+    savePrefs(p);
+  }
+  function isGlobalText(text) {
+    return getGlobalPhrases().some(function (g) { return g.text === text; });
+  }
+  function recordUse(sceneId, text) {
+    var p = loadPrefs();
+    if (isGlobalText(text)) {
+      p.gusage = p.gusage || {};
+      p.gusage[text] = (p.gusage[text] || 0) + 1;
+    } else {
+      if (!p.usage[sceneId]) p.usage[sceneId] = {};
+      p.usage[sceneId][text] = (p.usage[sceneId][text] || 0) + 1;
+    }
+    savePrefs(p);
+  }
+  function togglePin(sceneId, text) {
+    var p = loadPrefs();
+    p.pins = p.pins || {};
+    var arr = (p.pins[sceneId] || []).slice();
+    var i = arr.indexOf(text);
+    var pinned;
+    if (i >= 0) { arr.splice(i, 1); pinned = false; }
+    else { arr.push(text); pinned = true; }
+    p.pins[sceneId] = arr;
+    savePrefs(p);
+    renderQuick();
+    buzz(24);
+    toast(pinned ? '已置顶到最左边（再长按取消）' : '已取消置顶');
+  }
+  function sortedGlobals() {
+    var gu = loadPrefs().gusage || {};
+    return getGlobalPhrases().sort(function (a, b) {
+      var ua = gu[a.text] || 0, ub = gu[b.text] || 0;
+      if (ua !== ub) return ub - ua;
+      return (b.at || 0) - (a.at || 0);
+    });
+  }
+  function quickItems(sc) {
+    var items = [];
+    var seen = {};
+    (sc.quick || []).forEach(function (t, i) {
+      t = String(t).trim();
+      if (!t || seen[t]) return;
+      seen[t] = 1;
+      items.push({ text: t, idx: i, custom: false });
+    });
+    getCustomPhrases(sc.id).forEach(function (c, i) {
+      if (seen[c.text]) return;
+      seen[c.text] = 1;
+      items.push({ text: c.text, idx: 100 + i, custom: true, at: c.at || 0 });
+    });
+    return items;
+  }
+  // [{text, global, pinned}] —— 全局 → 置顶 → 按次数
+  function quickModel(sc) {
+    var prefs = loadPrefs();
+    var globals = sortedGlobals();
+    var pins = (prefs.pins && prefs.pins[sc.id]) || [];
+    var texts = L.composeQuick(quickItems(sc), prefs.usage[sc.id] || {}, {
+      global: globals.map(function (g) { return { text: g.text }; }),
+      pins: pins,
+      order: (prefs.order && prefs.order[sc.id]) || []
+    });
+    var gset = {}, pset = {};
+    globals.forEach(function (g) { gset[g.text] = 1; });
+    pins.forEach(function (t) { pset[t] = 1; });
+    return texts.map(function (t) {
+      return { text: t, global: !!gset[t], pinned: !gset[t] && !!pset[t] };
+    });
+  }
+
+  function renderQuick() {
+    var sc = state.scenario;
+    if (!sc) return;
+    var html = state.suggestions.map(function (t) {
+      return '<button class="chip new" type="button" data-t="' + L.escapeHtml(t) + '">' + L.escapeHtml(t) + '</button>';
+    }).join('');
+    html += quickModel(sc).map(function (it) {
+      var cls = 'chip' + (it.global ? ' global' : '') + (it.pinned ? ' pinned' : '');
+      var badge = it.global ? '<span class="chip-tag">通</span>' : (it.pinned ? '<span class="chip-dot"></span>' : '');
+      return '<button class="' + cls + '" type="button" data-t="' + L.escapeHtml(it.text) + '">' +
+        badge + L.escapeHtml(it.text) + '</button>';
+    }).join('');
+    $('#quick').innerHTML = html;
+  }
+
+  function addSuggestion(text) {
+    state.suggestions.unshift(text);
+    state.suggestions = state.suggestions.slice(0, 2);
+    renderQuick();
+  }
+
+  /* ---------------- 常用语管理弹层 ---------------- */
+  function openPhraseSheet() {
+    var sc = state.scenario;
+    if (!sc) return;
+    $('#phraseTitle').textContent = '常用语 · ' + sc.name;
+    $('#phraseSub').textContent = '点得越多越靠左；长按词组可置顶。勾“所有场景都能用”就每个场景都有。';
+    $('#phraseInput').value = '';
+    $('#phraseGlobal').checked = false;
+    renderPhraseList();
+    openSheet($('#phraseSheet'));
+    setTimeout(function () { try { $('#phraseInput').focus(); } catch (e) {} }, 260);
+  }
+
+  function phraseLi(text, count, delAttr) {
+    return '<li><span class="pt">' + L.escapeHtml(text) + '</span>' +
+      (count ? '<span class="pn">用过 ' + count + ' 次</span>' : '') +
+      '<button class="phrase-del" type="button" ' + delAttr + '="' + L.escapeHtml(text) + '" aria-label="删除这句">✕</button></li>';
+  }
+
+  function renderPhraseList() {
+    var sc = state.scenario;
+    if (!sc) return;
+    var prefs = loadPrefs();
+    var usage = prefs.usage[sc.id] || {};
+
+    // 本场景全部词组（不含全局），按当前显示顺序，可 ▲▼ 排序 / 📌 置顶 / ✕ 删除
+    var items = quickModel(sc).filter(function (x) { return !x.global; });
+    var customSet = {};
+    getCustomPhrases(sc.id).forEach(function (c) { customSet[c.text] = 1; });
+
+    var box = $('#phraseList');
+    if (!items.length) {
+      box.innerHTML = '<li class="phrase-empty">还没有词组</li>';
+    } else {
+      box.innerHTML = items.map(function (it, i) {
+        var prev = items[i - 1], next = items[i + 1];
+        var canUp = !!prev && prev.pinned === it.pinned;
+        var canDown = !!next && next.pinned === it.pinned;
+        var n = usage[it.text] || 0;
+        return '<li>' +
+          '<span class="pt">' + L.escapeHtml(it.text) +
+            (n ? ' <em class="pn">' + n + ' 次</em>' : '') + '</span>' +
+          '<button class="pbtn' + (it.pinned ? ' on' : '') + '" type="button" data-pin="' + L.escapeHtml(it.text) + '" aria-label="置顶">📌</button>' +
+          '<button class="pbtn" type="button" data-up="' + L.escapeHtml(it.text) + '" aria-label="上移"' + (canUp ? '' : ' disabled') + '>▲</button>' +
+          '<button class="pbtn" type="button" data-down="' + L.escapeHtml(it.text) + '" aria-label="下移"' + (canDown ? '' : ' disabled') + '>▼</button>' +
+          (customSet[it.text] ? '<button class="phrase-del" type="button" data-del="' + L.escapeHtml(it.text) + '" aria-label="删除这句">✕</button>' : '') +
+          '</li>';
+      }).join('');
+    }
+
+    var globals = sortedGlobals();
+    var gu = prefs.gusage || {};
+    $('#phraseGlobalList').innerHTML = globals.length
+      ? globals.map(function (c) { return phraseLi(c.text, gu[c.text] || 0, 'data-gdel'); }).join('')
+      : '<li class="phrase-empty">还没有全局常用语</li>';
+  }
+
+  function movePhrase(text, dir) {
+    var sc = state.scenario;
+    if (!sc) return;
+    var items = quickModel(sc).filter(function (x) { return !x.global; });
+    var i = items.map(function (x) { return x.text; }).indexOf(text);
+    var j = i + dir;
+    if (i < 0 || j < 0 || j >= items.length) return;
+    if (items[i].pinned !== items[j].pinned) {
+      toast('置顶的词组固定在最前，先取消置顶再移动');
+      return;
+    }
+    var seq = items.map(function (x) { return x.text; });
+    seq = L.moveItem(seq, text, dir);
+    var pinnedSet = {};
+    items.forEach(function (x) { if (x.pinned) pinnedSet[x.text] = 1; });
+    var p = loadPrefs();
+    p.pins = p.pins || {};
+    p.order = p.order || {};
+    p.pins[sc.id] = seq.filter(function (t) { return pinnedSet[t]; });
+    p.order[sc.id] = seq.filter(function (t) { return !pinnedSet[t]; });
+    savePrefs(p);
+    renderQuick();
+    renderPhraseList();
+    buzz(10);
+  }
+
+  function addPhrase() {
+    var sc = state.scenario;
+    if (!sc) return;
+    var isGlobal = $('#phraseGlobal').checked;
+    var text = ($('#phraseInput').value || '').trim();
+    if (!text) {
+      toast('先写一句要说的话');
+      try { $('#phraseInput').focus(); } catch (e) {}
+      return;
+    }
+    if (text.length > 20) text = text.slice(0, 20);
+    if (quickModel(sc).some(function (x) { return x.text === text; })) {
+      toast('这句已经在常用语里了');
+      return;
+    }
+    if (isGlobal) {
+      var g = getGlobalPhrases();
+      if (g.length >= 6) {
+        toast('全局最多 6 句，先在列表里删一句');
+        return;
+      }
+      g.push({ text: text, at: Date.now() });
+      setGlobalPhrases(g);
+    } else {
+      var list = getCustomPhrases(sc.id);
+      if (list.length >= 10) {
+        toast('每个场景最多 10 句，先删一句');
+        return;
+      }
+      list.push({ text: text, at: Date.now() });
+      setCustomPhrases(sc.id, list);
+    }
+    $('#phraseInput').value = '';
+    $('#phraseGlobal').checked = false;
+    renderPhraseList();
+    renderQuick();
+    toast(isGlobal ? '已加到全局，每个场景最左边都有' : '已加进本场景常用语');
+  }
+
+  function deletePhrase(text, isGlobal) {
+    var sc = state.scenario;
+    if (!sc) return;
+    if (isGlobal) {
+      setGlobalPhrases(getGlobalPhrases().filter(function (c) { return c.text !== text; }));
+    } else {
+      setCustomPhrases(sc.id, getCustomPhrases(sc.id).filter(function (c) { return c.text !== text; }));
+      var p = loadPrefs();
+      if (p.pins && p.pins[sc.id]) {
+        p.pins[sc.id] = p.pins[sc.id].filter(function (t) { return t !== text; });
+      }
+      if (p.order && p.order[sc.id]) {
+        p.order[sc.id] = p.order[sc.id].filter(function (t) { return t !== text; });
+      }
+      savePrefs(p);
+    }
+    renderPhraseList();
+    renderQuick();
+    toast('已删除');
+  }
+
+  /* ---------------- 我说 ---------------- */
+  function sendMine(text) {
+    text = String(text || '').trim();
+    if (!text) return;
+    stopDemo();
+    state.lastMine = text;
+    addLine('me', text);
+    state.suggestions = [];
+    renderQuick();
+    $('#myInput').value = '';
+  }
+
+  /* ---------------- 语音识别 ---------------- */
+  function fallbackToDemo() {
+    if (state.scenario && state.scenario.custom) {
+      toast('自定义场景没有演示：直接打字，或点下面的词组就能用', 3800);
+      return;
+    }
+    startDemo();
+  }
+
+  function hintKeyboardVoice() {
+    var box = document.getElementById('captions');
+    if (!box || box.querySelector('.kb-voice')) return;
+    var el = document.createElement('div');
+    el.className = 'kb-voice';
+    el.innerHTML = '<b>这个浏览器不支持直接收音</b><span>点下面的输入框，用键盘上的 🎤 说话，文字会自己进到输入框；也可以用 Chrome 打开本页。</span>';
+    el.addEventListener('click', function () {
+      var inp = document.getElementById('myInput');
+      if (inp) { inp.focus(); }
+    });
+    box.appendChild(el);
+    scrollBottom();
+  }
+
+  function startMic() {
+    if (!SR) {
+      toast('这个浏览器不支持实时识别：点输入框，用键盘上的麦克风说话', 5200);
+      hintKeyboardVoice();
+      return;
+    }
+    if (state.listening) return;
+    try {
+      var rec = new SR();
+      rec.lang = 'zh-CN';
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onresult = onResult;
+      rec.onerror = function (e) {
+        var code = e && e.error;
+        if (code === 'not-allowed' || code === 'service-not-allowed') {
+          toast('麦克风被拒绝：可以允许权限后重试，先用演示给你看', 4200);
+          stopMic();
+          fallbackToDemo();
+        } else if (code === 'network') {
+          toast('语音服务连不上（国内网络常见），先切到演示模式', 4200);
+          stopMic();
+          fallbackToDemo();
+        } else if (code === 'no-speech') {
+          /* 忽略 */
+        } else {
+          toast('识别出错了：' + code, 3200);
+        }
+      };
+      rec.onend = function () {
+        if (state.listening) {
+          try { rec.start(); } catch (e) {}
+        }
+      };
+      rec.start();
+      state.rec = rec;
+      state.listening = true;
+      $('#btnMic').classList.add('on');
+      setLive('正在收音 · 屏幕上出现的就是对方说的话', true);
+      keepAwake();
+    } catch (e) {
+      toast('麦克风启动失败，可以先用演示或打字');
+    }
+  }
+
+  function stopMic() {
+    state.listening = false;
+    $('#btnMic').classList.remove('on');
+    if (state.rec) {
+      try { state.rec.onend = null; state.rec.stop(); } catch (e) {}
+      state.rec = null;
+    }
+    clearInterim();
+  }
+
+  function toggleMic() {
+    if (state.listening) {
+      stopMic();
+      setLive('已暂停 · 点麦克风继续', false);
+    } else {
+      startMic();
+    }
+  }
+
+  function onResult(e) {
+    var interim = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      var r = e.results[i];
+      var txt = (r[0] && r[0].transcript || '').trim();
+      if (r.isFinal) {
+        if (txt) addLine('clerk', txt);
+      } else {
+        interim += txt;
+      }
+    }
+    setInterim(interim);
+  }
+
+  function setInterim(text) {
+    if (!text) { clearInterim(); return; }
+    if (!state.interimEl) {
+      state.interimEl = document.createElement('div');
+      state.interimEl.className = 'ghost-line';
+      $('#captions').appendChild(state.interimEl);
+    }
+    state.interimEl.textContent = text;
+    scrollBottom();
+  }
+  function clearInterim() {
+    if (state.interimEl && state.interimEl.parentNode) state.interimEl.parentNode.removeChild(state.interimEl);
+    state.interimEl = null;
+  }
+
+  /* ---------------- 演示模式 ---------------- */
+  function startDemo() {
+    if (!state.scenario) { start('dine', { skipGreeting: true, quiet: true }); }
+    stopMic();
+    stopDemo();
+    var seq = state.scenario.demo || [];
+    if (!seq.length) {
+      setLive('这个场景没有演示：点麦克风收音，或直接打字', false);
+      toast('自定义场景没有演示，直接打字或点词组就行', 3600);
+      return;
+    }
+    state.demo = true;
+    var i = 0;
+    setLive('演示中：正在播放一段真实对话', false);
+    var step = function () {
+      if (!state.demo) return;
+      if (i >= seq.length) {
+        state.demo = false;
+        setLive('演示结束 · 可以自己点词组或打字试试', false);
+        demoEndCard();
+        return;
+      }
+      var item = seq[i++];
+      if (item.who === 'me') state.lastMine = item.text;
+      addLine(item.who, item.text);
+      state.demoTimer = setTimeout(step, item.who === 'clerk' ? 2800 : 2200);
+    };
+    step();
+  }
+
+  function stopDemo() {
+    state.demo = false;
+    if (state.demoTimer) { clearTimeout(state.demoTimer); state.demoTimer = null; }
+  }
+
+  /* 演示结束卡：直接跳去体验新增功能 */
+  function demoEndCard() {
+    var box = document.getElementById('captions');
+    var old = box.querySelector('.demo-end');
+    if (old) old.parentNode.removeChild(old);
+    var el = document.createElement('div');
+    el.className = 'demo-end';
+    el.innerHTML = '<b>演示结束</b>' +
+      '<span>接着试试这几个新功能：</span>' +
+      '<div class="demo-links">' +
+        '<button type="button" data-goto="video">视频柜台</button>' +
+        '<button type="button" data-goto="sos">紧急求助</button>' +
+        '<button type="button" data-goto="quick">整理常用语</button>' +
+      '</div>';
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-goto]');
+      if (!b) return;
+      if (b.dataset.goto === 'video') startCall();
+      else if (b.dataset.goto === 'sos') openSos();
+      else openPhraseSheet();
+    });
+    box.appendChild(el);
+    scrollBottom();
+  }
+
+  /* ---------------- 递屏 ---------------- */
+  function openPass() {
+    var t = state.lastMine || '请说慢一点，谢谢';
+    $('#passText').textContent = t;
+    setPassTab('say');
+    var el = $('#pass');
+    el.classList.add('show');
+    el.setAttribute('aria-hidden', 'false');
+    speak(t);
+  }
+  function closePass() {
+    var el = $('#pass');
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden', 'true');
+  }
+
+  /* ---------------- 递屏第二页：对方写给我看 ---------------- */
+  var pad = { ready: false, ctx: null, drawing: false };
+
+  function setPassTab(tab) {
+    Array.prototype.forEach.call(document.querySelectorAll('.pass-tabs button'), function (b) {
+      b.classList.toggle('on', b.dataset.ptab === tab);
+    });
+    var write = tab === 'write';
+    $('#passText').hidden = write;
+    $('#passHint').hidden = write;
+    $('#passWrite').hidden = !write;
+    if (write) {
+      // 尺寸变了（转屏 / 换机型）就重建画布，否则只清空
+      var c = $('#writePad');
+      var r = c.getBoundingClientRect();
+      var dpr = window.devicePixelRatio || 1;
+      var need = !pad.ready || Math.abs(c.width - Math.round(r.width * dpr)) > 2;
+      if (need) initPad();
+      else padClear();
+    }
+  }
+
+  function initPad() {
+    var c = $('#writePad');
+    var rect = c.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var dpr = window.devicePixelRatio || 1;
+    c.width = Math.round(rect.width * dpr);
+    c.height = Math.round(rect.height * dpr);
+    var g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    g.lineWidth = 4;
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.strokeStyle = '#F1F5FF';
+    pad.ctx = g;
+    pad.ready = true;
+  }
+
+  function padClear() {
+    var c = $('#writePad');
+    if (!pad.ctx) return;
+    pad.ctx.clearRect(0, 0, c.width, c.height);
+  }
+
+  function padPoint(e) {
+    var r = $('#writePad').getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  function padDown(e) {
+    if (!pad.ready) initPad();
+    if (!pad.ctx) return;
+    pad.drawing = true;
+    var p = padPoint(e);
+    pad.ctx.beginPath();
+    pad.ctx.moveTo(p.x, p.y);
+    pad.ctx.stroke();
+    try { $('#writePad').setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault();
+  }
+
+  function padMove(e) {
+    if (!pad.drawing || !pad.ctx) return;
+    var p = padPoint(e);
+    pad.ctx.lineTo(p.x, p.y);
+    pad.ctx.stroke();
+    e.preventDefault();
+  }
+
+  function padUp() { pad.drawing = false; }
+
+  /* ---------------- 紧急求助 ---------------- */
+  var sosLoc = '';
+
+  function openSos() {
+    $('#sos').classList.add('show');
+    $('#sos').setAttribute('aria-hidden', 'false');
+    var phone = '';
+    try { phone = localStorage.getItem('sq-sos-phone') || ''; } catch (e) {}
+    $('#sosPhone').value = phone;
+    speak('我听不见，需要帮助，请帮我拨打一二零，或者一一零，谢谢', { rate: 0.9 });
+  }
+
+  function closeSos() {
+    $('#sos').classList.remove('show');
+    $('#sos').setAttribute('aria-hidden', 'true');
+  }
+
+  function sosText() {
+    return '紧急求助：我是听障人士，听不见也不会说，现在需要帮助。时间：' +
+      L.fmtDateTime(Date.now()) + '。' +
+      (sosLoc ? '位置：' + sosLoc + '。' : '') +
+      '请拨打 120 / 110，或用文字与我交流。';
+  }
+
+  function withGeo(cb) {
+    if (sosLoc || !navigator.geolocation) return cb();
+    var done = false;
+    var t = setTimeout(function () { if (!done) { done = true; cb(); } }, 3500);
+    navigator.geolocation.getCurrentPosition(function (p) {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      sosLoc = '纬度 ' + p.coords.latitude.toFixed(5) + '，经度 ' + p.coords.longitude.toFixed(5);
+      cb();
+    }, function () {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      cb();
+    }, { timeout: 3000, maximumAge: 60000 });
+  }
+
+  /* ---------------- 视频柜台：通话 / 店员识别 / 指一指 ---------------- */
+  var POINT_CANDS = ['多少钱？', '这是什么？', '可以试吗？', '有优惠吗？'];
+
+  var call = {
+    active: false, stream: null, facing: 'environment', subs: false,
+    rec: null, recOn: false, t0: 0, timer: null, det: null,
+    canvas: null, ctx: null, prev: null, mass: 0, lastMove: 0,
+    buf: [], presence: 0, found: false, cooldown: 0,
+    pointMode: false, pointSheetOpen: false, fallback: false, cand: 0, loc: '这个', text: ''
+  };
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function dirToLoc(dx, dy) {
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.12) return { loc: '这个', sign: '' };
+    var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (ang >= -22.5 && ang < 22.5) return { loc: '右边那个', sign: '右' };
+    if (ang >= 22.5 && ang < 67.5) return { loc: '右下那个', sign: '右下' };
+    if (ang >= 67.5 && ang < 112.5) return { loc: '下面那个', sign: '下' };
+    if (ang >= 112.5 && ang < 157.5) return { loc: '左下那个', sign: '左下' };
+    if (ang >= 157.5 || ang < -157.5) return { loc: '左边那个', sign: '左' };
+    if (ang >= -157.5 && ang < -112.5) return { loc: '左上那个', sign: '左上' };
+    if (ang >= -112.5 && ang < -67.5) return { loc: '上面那个', sign: '上' };
+    return { loc: '右上那个', sign: '右上' };
+  }
+
+  function fallbackStream() {
+    var c = document.createElement('canvas');
+    c.width = 720; c.height = 1280;
+    var g = c.getContext('2d');
+    var t = 0;
+    function draw() {
+      t += 0.02;
+      var grd = g.createLinearGradient(0, 0, 0, c.height);
+      grd.addColorStop(0, '#1a2b47'); grd.addColorStop(1, '#0a0f19');
+      g.fillStyle = grd; g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = '#132033'; g.fillRect(0, c.height * 0.66, c.width, c.height * 0.34);
+      var cx = c.width / 2 + Math.sin(t) * 12, cy = c.height * 0.33;
+      g.fillStyle = '#c08a63';                       // 肤色：让「店员入镜」检测在示意画面里也能跑通
+      g.beginPath(); g.arc(cx, cy, 118, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#2b4468';
+      g.beginPath(); g.ellipse(cx, cy + 340, 250, 210, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#c08a63';
+      g.beginPath(); g.arc(c.width * 0.74 + Math.sin(t * 0.9) * 26, c.height * 0.52, 62, 0, Math.PI * 2); g.fill();
+      requestAnimationFrame(draw);
+    }
+    draw();
+    return c.captureStream(20);
+  }
+
+  function attachStream(st, isFallback) {
+    if (call.stream) { try { call.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} }
+    call.stream = st;
+    call.fallback = !!isFallback;
+    var v = document.getElementById('callVideo');
+    v.muted = true;
+    v.srcObject = st;
+    v.play().catch(function () {});
+  }
+
+  function setCallState(text) {
+    document.getElementById('callStateText').textContent = text;
+  }
+
+  function showCallTip(on, title, sub) {
+    var el = document.getElementById('callTip');
+    if (title) el.querySelector('b').textContent = title;
+    if (sub) el.querySelector('span').textContent = sub;
+    el.classList.toggle('show', !!on);
+  }
+
+  function openCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      attachStream(fallbackStream(), true);
+      return Promise.resolve();
+    }
+    return new Promise(function (resolve) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        attachStream(fallbackStream(), true);
+        resolve();
+      }, 5000);
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: call.facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      }).catch(function () {
+        // 有些机型不接受 facingMode，退回任意摄像头
+        return navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }).then(function (st) {
+        clearTimeout(timer);
+        if (done) { try { st.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} return; }
+        done = true;
+        attachStream(st, false);
+        resolve();
+      }).catch(function () {
+        clearTimeout(timer);
+        if (done) return;
+        done = true;
+        attachStream(fallbackStream(), true);
+        resolve();
+      });
+    });
+  }
+
+  function startTimer() {
+    stopTimer();
+    call.t0 = Date.now();
+    var el = document.getElementById('callTimer');
+    var tick = function () {
+      var s = Math.floor((Date.now() - call.t0) / 1000);
+      el.textContent = pad2(Math.floor(s / 60)) + ':' + pad2(s % 60);
+    };
+    tick();
+    call.timer = setInterval(tick, 1000);
+  }
+  function stopTimer() {
+    if (call.timer) { clearInterval(call.timer); call.timer = null; }
+  }
+
+  function startDetection() {
+    stopDetection();
+    if (!call.canvas) {
+      call.canvas = document.createElement('canvas');
+      call.canvas.width = 96; call.canvas.height = 72;
+      call.ctx = call.canvas.getContext('2d', { willReadFrequently: true });
+    }
+    call.prev = null;
+    call.det = setInterval(sampleFrame, 180);
+  }
+  function stopDetection() {
+    if (call.det) { clearInterval(call.det); call.det = null; }
+  }
+
+  function sampleFrame() {
+    if (!call.active || !call.canvas) return;
+    var v = document.getElementById('callVideo');
+    if (!v || !v.videoWidth) return;
+    var W = call.canvas.width, H = call.canvas.height;
+    var g = call.ctx;
+    try { g.drawImage(v, 0, 0, W, H); } catch (e) { return; }
+    var d;
+    try { d = g.getImageData(0, 0, W, H).data; } catch (e) { return; }
+    var gray = new Float32Array(W * H);
+    for (var i = 0, p = 0; i < gray.length; i++, p += 4) {
+      gray[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+    }
+    if (call.prev) trackMotion(gray, W, H);
+    call.prev = gray;
+    if (!call.pointSheetOpen) detectClerk(d, W, H);
+  }
+
+  function trackMotion(gray, W, H) {
+    var prev = call.prev, mass = 0, sx = 0, sy = 0;
+    for (var i = 0; i < gray.length; i++) {
+      if (Math.abs(gray[i] - prev[i]) > 18) {
+        var x = i % W, y = (i - x) / W;
+        mass++; sx += x; sy += y;
+      }
+    }
+    call.mass = mass;
+    var now = Date.now();
+    if (mass > 400) {
+      call.buf.push({ x: sx / mass / W, y: sy / mass / H, t: now });
+      if (call.buf.length > 14) call.buf.shift();
+      call.lastMove = now;
+    }
+    if (call.pointSheetOpen) { if (mass < 120) call.buf = []; return; }
+
+    // 手势结束：画面稳定、且刚刚有连续位移
+    if (mass < 170 && call.buf.length >= 5 && now - call.lastMove < 420 && now - call.cooldown > 2600) {
+      var a = call.buf[0], b = call.buf[call.buf.length - 1];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var dur = b.t - a.t;
+      // 主动按了「指一指」放宽；自动模式要求：从画面下半部起手、位移大、动作快
+      var ok = call.pointMode
+        ? (dist > 0.12 && dur < 1600)
+        : (dist > 0.2 && a.y > 0.55 && dur < 1000);
+      if (ok) {
+        call.cooldown = now;
+        call.buf = [];
+        call.pointMode = false;
+        openPointSheet(dirToLoc(dx, dy));
+        return;
+      }
+      call.buf = [];
+    }
+    if (now - call.lastMove > 1600) call.buf = [];
+  }
+
+  function detectClerk(d, W, H) {
+    var cnt = 0, minX = 1e9, minY = 1e9, maxX = -1, maxY = -1;
+    var ucnt = 0, uminX = 1e9, uminY = 1e9, umaxX = -1, umaxY = -1;
+    var x0 = (W * 0.15) | 0, x1 = (W * 0.85) | 0, y0 = (H * 0.08) | 0, y1 = (H * 0.72) | 0;
+    for (var y = y0; y < y1; y++) {
+      for (var x = x0; x < x1; x++) {
+        var p = (y * W + x) * 4, r = d[p], g2 = d[p + 1], b = d[p + 2];
+        var cb = 128 - 0.168736 * r - 0.331264 * g2 + 0.5 * b;
+        var cr = 128 + 0.5 * r - 0.418688 * g2 - 0.081312 * b;
+        if (cb >= 77 && cb <= 135 && cr >= 133 && cr <= 180 && r > 55 && r > b) {
+          cnt++;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+          if (y < H * 0.5) {
+            ucnt++;
+            if (x < uminX) uminX = x;
+            if (x > umaxX) umaxX = x;
+            if (y < uminY) uminY = y;
+            if (y > umaxY) umaxY = y;
+          }
+        }
+      }
+    }
+    var area = (x1 - x0) * (y1 - y0);
+    var ratio = area ? cnt / area : 0;
+    if (ratio > 0.05) call.presence = Math.min(5, call.presence + 1);
+    else if (ratio < 0.02) call.presence = Math.max(0, call.presence - 1);
+
+    var found = call.presence >= 3;
+    if (found !== call.found) {
+      call.found = found;
+      var badge = document.getElementById('clerkBadge');
+      badge.classList.toggle('found', found);
+      document.getElementById('clerkBadgeText').textContent = found
+        ? (SR ? '店员已入镜 · 字幕已开启' : '店员已入镜')
+        : '正在识别店员…';
+    }
+    var box = document.getElementById('faceBox');
+    // 优先框头部（画面上半部），避免把手也框进来
+    var useUpper = ucnt > cnt * 0.35 && ucnt > 20;
+    var bx = useUpper ? uminX : minX, by = useUpper ? uminY : minY;
+    var bw = useUpper ? (umaxX - uminX) : (maxX - minX);
+    var bh = useUpper ? (umaxY - uminY) : (maxY - minY);
+    if (found && bw > 0 && bh > 0) {
+      var r2 = mapBox({ x: bx / W, y: by / H, w: bw / W, h: bh / H });
+      box.hidden = false;
+      box.style.left = r2.x + 'px';
+      box.style.top = r2.y + 'px';
+      box.style.width = r2.w + 'px';
+      box.style.height = r2.h + 'px';
+    } else {
+      box.hidden = true;
+    }
+  }
+
+  function mapBox(n) {
+    var v = document.getElementById('callVideo');
+    var elW = v.clientWidth || 1, elH = v.clientHeight || 1;
+    var vw = v.videoWidth || 16, vh = v.videoHeight || 9;
+    var scale = Math.max(elW / vw, elH / vh);
+    var dw = vw * scale, dh = vh * scale;
+    var ox = (elW - dw) / 2, oy = (elH - dh) / 2;
+    var x = ox + n.x * dw, y = oy + n.y * dh, w = n.w * dw, h = n.h * dh;
+    if (document.getElementById('view-call').classList.contains('mirror')) x = elW - x - w;
+    return { x: Math.max(-w / 2, x), y: Math.max(-h / 2, y), w: w, h: h };
+  }
+
+  /* 店员语音 → 字幕 */
+  function startCallSubs() {
+    if (!SR || call.recOn) return;
+    try {
+      var rec = new SR();
+      rec.lang = 'zh-CN';
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onresult = function (e) {
+        var interim = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          var r = e.results[i];
+          var txt = (r[0] && r[0].transcript || '').trim();
+          if (r.isFinal) { if (txt) callAdd('clerk', txt); }
+          else interim += txt;
+        }
+        setCallInterim(interim);
+      };
+      rec.onerror = function (e) {
+        var code = e && e.error;
+        if (code === 'not-allowed' || code === 'service-not-allowed') { toast('麦克风被拒绝，字幕开不了'); stopCallSubs(); }
+        else if (code === 'network') { toast('识别服务连不上，字幕暂不可用', 3400); stopCallSubs(); }
+      };
+      rec.onend = function () { if (call.recOn) { try { rec.start(); } catch (e) {} } };
+      rec.start();
+      call.rec = rec;
+      call.recOn = true;
+      document.getElementById('btnSubs').classList.add('on');
+    } catch (e) {
+      toast('字幕启动失败');
+    }
+  }
+
+  function stopCallSubs() {
+    call.recOn = false;
+    if (call.rec) {
+      try { call.rec.onend = null; call.rec.stop(); } catch (e) {}
+      call.rec = null;
+    }
+    document.getElementById('btnSubs').classList.remove('on');
+    clearCallInterim();
+  }
+
+  function callAdd(who, text) {
+    text = String(text || '').trim();
+    if (!text) return;
+    state.lines.push({ who: who, text: text, at: Date.now() });
+    if (who === 'me') state.lastMine = text;
+    var box = document.getElementById('callCaptions');
+    var el = document.createElement('div');
+    el.className = 'cap' + (who === 'me' ? ' me' : '');
+    el.innerHTML = '<span class="who">' + (who === 'me' ? '我说' : '店员') + '</span>' +
+      '<span class="txt">' + L.highlight(text) + '</span>';
+    box.appendChild(el);
+    while (box.children.length > 3) box.removeChild(box.firstChild);
+    if (who === 'clerk') { buzz(12); handleQueue(text); }
+  }
+
+  /* ---------------- 叫号识别（广播 / 窗口叫号） ---------------- */
+  var queue = { on: true, timer: null, last: '', at: 0, where: '' };
+
+  function handleQueue(text) {
+    if (!queue.on) return;
+    var q = L.parseQueue(text);
+    if (!q) return;
+    var now = Date.now();
+    var id = q.no ? 'n:' + q.no : 'w:' + q.where;
+    if (id === queue.last && now - queue.at < 8000) {
+      // 同一号码重复播报：不重弹；如果这句带了窗口信息而之前没有，补上
+      if (q.where && !queue.where) {
+        queue.where = q.where;
+        document.getElementById('qWhere').textContent = q.where;
+      }
+      return;
+    }
+    queue.last = id;
+    queue.at = now;
+    queue.where = q.where;
+    showQueue(q);
+  }
+
+  function showQueue(q) {
+    var el = document.getElementById('queueAlert');
+    document.getElementById('qNo').textContent = q.no || '—';
+    document.getElementById('qWhere').textContent = q.where || '请留意屏幕';
+    document.getElementById('qRaw').textContent = q.raw || '';
+    el.hidden = false;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+    buzz([200, 80, 200, 80, 320]);
+    clearTimeout(queue.timer);
+    queue.timer = setTimeout(hideQueue, 9000);
+    setTimeout(function () { if (!el.hidden) buzz([120, 60, 120]); }, 2400);
+  }
+
+  function hideQueue() {
+    var el = document.getElementById('queueAlert');
+    if (!el) return;
+    el.hidden = true;
+    el.classList.remove('pulse');
+    clearTimeout(queue.timer);
+  }
+
+  function setCallInterim(text) {
+    var box = document.getElementById('callCaptions');
+    if (!text) { clearCallInterim(); return; }
+    if (!call.interimEl) {
+      call.interimEl = document.createElement('div');
+      call.interimEl.className = 'cap';
+      call.interimEl.innerHTML = '<span class="who">店员</span><span class="txt"></span>';
+      box.appendChild(call.interimEl);
+    }
+    call.interimEl.querySelector('.txt').textContent = text;
+    while (box.children.length > 3) box.removeChild(box.firstChild);
+  }
+  function clearCallInterim() {
+    if (call.interimEl && call.interimEl.parentNode) call.interimEl.parentNode.removeChild(call.interimEl);
+    call.interimEl = null;
+  }
+
+  /* 指一指 → 确认书 */
+  function openPointSheet(dir) {
+    call.loc = dir.loc;
+    call.cand = 0;
+    call.pointSheetOpen = true;
+    document.getElementById('pointLoc').textContent = dir.sign
+      ? '你手指的方向：' + dir.sign
+      : '没有指向具体方向，就按“这个”来问';
+    renderPointText();
+    renderPointChips();
+    var s = document.getElementById('pointSheet');
+    s.classList.add('show');
+    s.setAttribute('aria-hidden', 'false');
+    buzz([10, 55, 10]);
+  }
+
+  function renderPointText() {
+    call.text = call.loc + POINT_CANDS[call.cand];
+    document.getElementById('pointText').textContent = call.text;
+  }
+
+  function renderPointChips() {
+    document.getElementById('pointChips').innerHTML = POINT_CANDS.map(function (c, i) {
+      return '<button class="chip' + (i === call.cand ? ' on' : '') + '" type="button" data-cand="' + i + '">' +
+        L.escapeHtml(c) + '</button>';
+    }).join('');
+  }
+
+  function closePointSheet() {
+    call.pointSheetOpen = false;
+    var s = document.getElementById('pointSheet');
+    s.classList.remove('show');
+    s.setAttribute('aria-hidden', 'true');
+  }
+
+  function confirmPoint() {
+    var text = call.text || (call.loc + POINT_CANDS[call.cand]);
+    closePointSheet();
+    callAdd('me', text);
+    speak(text);
+    toast('已替你问出来：' + text, 2600);
+  }
+
+  function retryPoint() {
+    closePointSheet();
+    call.pointMode = true;
+    call.buf = [];
+    showCallTip(true, '再指一下', '把手指指向想问的东西，停一下；也可以直接在屏幕上划一下');
+    setTimeout(function () { showCallTip(false); }, 3600);
+  }
+
+  function switchCamera() {
+    if (call.fallback) { toast('示意画面不支持切换摄像头'); return; }
+    call.facing = call.facing === 'user' ? 'environment' : 'user';
+    document.getElementById('view-call').classList.toggle('mirror', call.facing === 'user');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: call.facing } }, audio: false })
+      .catch(function () { return navigator.mediaDevices.getUserMedia({ video: true, audio: false }); })
+      .then(function (st) { attachStream(st, false); })
+      .catch(function () { toast('切换摄像头失败', 2600); });
+  }
+
+  function startCall() {
+    if (call.active) return;
+    call.active = true;
+    call.facing = 'environment';
+    document.getElementById('view-call').classList.toggle('mirror', false);
+    call.subs = !!SR;
+    call.fallback = false;
+    call.buf = [];
+    call.prev = null;
+    call.presence = 0;
+    call.found = false;
+    call.pointMode = false;
+    call.pointSheetOpen = false;
+    call.cooldown = 0;
+
+    state.scenario = state.scenario || D.scenarios[0];
+    state.lines = [];
+    state.facts = [];
+    state.risks = [];
+    state.suggestions = [];
+    state.startedAt = Date.now();
+
+    hideQueue();
+    queue.last = '';
+    queue.where = '';
+    document.getElementById('callCaptions').innerHTML = '';
+    document.getElementById('clerkBadge').classList.remove('found');
+    document.getElementById('clerkBadgeText').textContent = '正在识别店员…';
+    document.getElementById('faceBox').hidden = true;
+    document.getElementById('callTimer').textContent = '00:00';
+    document.getElementById('btnSubs').classList.toggle('on', false);
+    document.getElementById('view-call').classList.toggle('mirror', call.facing === 'user');
+    setCallState('正在连接…');
+    show('call');
+    showCallTip(true, '把手机立在柜台上', '镜头对着店员，说话会变成字幕；指一下想问的东西，确认后就替你问出来');
+    setTimeout(function () { showCallTip(false); }, 4600);
+
+    // 计时和检测先起来：摄像头授权弹窗期间界面也是活的
+    startTimer();
+    startDetection();
+    if (call.subs) startCallSubs();
+
+    openCamera().then(function () {
+      setCallState(call.fallback ? '示意画面 · 未拿到摄像头' : '已连接 · 通话中');
+    });
+  }
+  function endCall() {
+    if (!call.active) return;
+    call.active = false;
+    stopTimer();
+    stopDetection();
+    stopCallSubs();
+    closePointSheet();
+    if (call.stream) {
+      try { call.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+      call.stream = null;
+    }
+    var v = document.getElementById('callVideo');
+    if (v) v.srcObject = null;
+    document.getElementById('faceBox').hidden = true;
+    hideQueue();
+    showCallTip(false);
+    if (state.lines.length > 1) endSession();
+    else show('home');
+  }
+
+  function bindCall() {
+    document.getElementById('btnVideo').addEventListener('click', startCall);
+    document.getElementById('btnHangup').addEventListener('click', endCall);
+    document.getElementById('btnFlip').addEventListener('click', switchCamera);
+
+    // 识别不到手势时，直接点画面也能问（按点击位置换算方向）
+    document.getElementById('callVideo').addEventListener('click', function (e) {
+      if (!call.active || call.pointSheetOpen) return;
+      var r = this.getBoundingClientRect();
+      var dx = (e.clientX - r.left) / r.width - 0.5;
+      var dy = (e.clientY - r.top) / r.height - 0.5;
+      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return;
+      call.pointMode = false;
+      call.buf = [];
+      openPointSheet(dirToLoc(dx, dy));
+    });
+    document.getElementById('btnCamSwitch').addEventListener('click', switchCamera);
+
+    document.getElementById('btnSubs').addEventListener('click', function () {
+      if (!SR) { toast('这个浏览器不支持实时字幕'); return; }
+      if (call.recOn) stopCallSubs();
+      else startCallSubs();
+    });
+
+    // 叫号提醒开关
+    document.getElementById('btnQueue').addEventListener('click', function () {
+      queue.on = !queue.on;
+      this.classList.toggle('on', queue.on);
+      if (!queue.on) hideQueue();
+      toast(queue.on ? '叫号提醒已开：听到号码会震动 + 大字' : '叫号提醒已关');
+    });
+    document.getElementById('qClose').addEventListener('click', hideQueue);
+    document.getElementById('queueAlert').addEventListener('click', function (e) {
+      if (e.target.closest('.q-close')) return;
+      hideQueue();
+    });
+
+    document.getElementById('btnPoint').addEventListener('click', function () {
+      call.pointMode = true;
+      call.buf = [];
+      showCallTip(true, '指一下想问的东西', '把手指指向菜单、商品或价格牌，停一下就会出确认书；也可以直接在屏幕上划一下');
+      setTimeout(function () { showCallTip(false); }, 4200);
+    });
+
+    document.getElementById('pointChips').addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      call.cand = parseInt(chip.dataset.cand, 10) || 0;
+      renderPointText();
+      renderPointChips();
+    });
+
+    document.getElementById('btnPointSay').addEventListener('click', confirmPoint);
+    document.getElementById('btnPointRetry').addEventListener('click', retryPoint);
+
+    // 触屏兜底：在画面上划一下也能触发确认书
+    var touch = null;
+    var video = document.getElementById('callVideo');
+    video.addEventListener('pointerdown', function (e) {
+      if (!call.active) return;
+      touch = { x: e.clientX, y: e.clientY, t: Date.now() };
+    });
+    window.addEventListener('pointerup', function (e) {
+      if (!call.active || !touch) return;
+      var dx = e.clientX - touch.x, dy = e.clientY - touch.y;
+      var dur = Date.now() - touch.t;
+      touch = null;
+      if (call.pointSheetOpen || dur > 1400) return;
+      if (Math.sqrt(dx * dx + dy * dy) < 24) {
+        openPointSheet({ loc: '这个', sign: '' });
+        return;
+      }
+      openPointSheet(dirToLoc(dx / window.innerWidth, dy / window.innerHeight));
+    });
+  }
+
+  /* ---------------- 凭证 ---------------- */
+  function endSession() {
+    if (!state.scenario) { show('home'); return; }
+    stopDemo();
+    stopMic();
+    releaseAwake();
+
+    state.receipt = {
+      scene: state.scenario.name,
+      start: state.startedAt || Date.now(),
+      end: Date.now(),
+      facts: state.facts,
+      risks: state.risks,
+      lines: state.lines
+    };
+    renderReceipt(state.receipt);
+    show('receipt');
+  }
+
+  function renderReceipt(r) {
+    $('#rcScene').textContent = '声桥 · ' + r.scene;
+    $('#rcTime').textContent = L.fmtTime(r.start) + ' — ' + L.fmtTime(r.end);
+
+    var seen = {};
+    var facts = (r.facts || []).filter(function (f) {
+      var k = f.label + '|' + f.value;
+      if (seen[k]) return false;
+      seen[k] = 1;
+      return true;
+    });
+
+    $('#rcFacts').innerHTML = facts.length
+      ? groupFacts(facts).map(function (f) {
+          var sym = f.status === 'ok' ? '✓' : (f.status === 'doubt' ? '？' : '·');
+          return '<li><span class="k">' + sym + ' ' + L.escapeHtml(f.label) + '</span><span class="v">' +
+            L.escapeHtml(f.value) + '</span></li>';
+        }).join('')
+      : '<li><span class="v" style="color:#8FA0BE">这次没有需要确认的信息</span></li>';
+
+    var riskSeen = {};
+    var risks = (r.risks || []).filter(function (x) {
+      if (riskSeen[x.tip]) return false;
+      riskSeen[x.tip] = 1;
+      return true;
+    });
+    $('#rcRisk').textContent = risks.length
+      ? risks.map(function (x) { return '· ' + x.tip; }).join('\n')
+      : '无';
+
+    $('#rcLines').innerHTML = (r.lines || []).map(function (l) {
+      return '<li><span class="who">' + (l.who === 'clerk' ? '店员' : '我') + ' ' + L.fmtTime(l.at) + '</span>' +
+        L.escapeHtml(l.text) + '</li>';
+    }).join('');
+  }
+
+  function copyText(txt) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast('已复制'); }
+      catch (e) { toast('复制失败，请长按文字手动复制'); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(txt).then(function () { toast('已复制'); }, fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  function downloadText(txt) {
+    try {
+      var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = '声桥-沟通凭证-' + L.fmtDateTime(Date.now()).replace(/[: ]/g, '-') + '.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1200);
+      toast('已保存到下载');
+    } catch (e) {
+      toast('保存失败，可以点「复制文字」');
+    }
+  }
+
+  /* ---------------- 字号 ---------------- */
+  function applyFs() {
+    $('#phone').dataset.fs = state.fs;
+    var seq = ['m', 'l', 'xl'];
+    var i = seq.indexOf(state.fs);
+    $('#btnFs').textContent = i >= 2 ? 'A-' : 'A+';
+    $('#btnFs').setAttribute('aria-label', i >= 2 ? '恢复标准字号' : '放大字号');
+    try { localStorage.setItem('sq-fs', state.fs); } catch (e) {}
+    updateFsSeg();
+  }
+
+  function updateFsSeg() {
+    Array.prototype.forEach.call(document.querySelectorAll('#fsSeg [data-fs]'), function (b) {
+      b.classList.toggle('on', b.dataset.fs === state.fs);
+    });
+  }
+
+  /* ---------------- 首次引导 / 设置 ---------------- */
+  var SETTING_KEYS = ['sq-phrase-prefs', 'sq-custom-scenes', 'sq-scene-order', 'sq-scene-hidden', 'sq-fs', 'sq-sos-phone', 'sq-hint-phrase'];
+
+  function markWelcomed() {
+    try { localStorage.setItem('sq-welcomed', '1'); } catch (e) {}
+  }
+
+  function collectSettings() {
+    var obj = {};
+    SETTING_KEYS.forEach(function (k) {
+      var raw = null;
+      try { raw = localStorage.getItem(k); } catch (e) {}
+      if (raw == null) return;
+      if (k === 'sq-fs' || k === 'sq-sos-phone') { obj[k] = raw; return; }
+      try { obj[k] = JSON.parse(raw); } catch (e) {}
+    });
+    return obj;
+  }
+
+  function openSettings() {
+    openSheet($('#settings'));
+    updateFsSeg();
+    $('#settingsBox').value = '';
+  }
+
+  function exportSettings() {
+    var json = JSON.stringify(collectSettings(), null, 2);
+    $('#settingsBox').value = json;
+    copyText(json);
+    toast('设置已复制，发到新手机再导入');
+  }
+
+  function exportSettingsFile() {
+    var json = JSON.stringify(collectSettings(), null, 2);
+    downloadText(json);
+    toast('设置文件已保存');
+  }
+
+  function importSettings() {
+    var r = L.parseSettings($('#settingsBox').value);
+    if (!r.ok) { toast(r.error, 3200); return; }
+    var n = 0;
+    Object.keys(r.data).forEach(function (k) {
+      try {
+        var v = r.data[k];
+        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+        n++;
+      } catch (e) {}
+    });
+    try { state.fs = localStorage.getItem('sq-fs') || 'm'; } catch (e) {}
+    applyFs();
+    renderScenes();
+    toast('已导入 ' + n + ' 项设置');
+  }
+
+  function wipeAll() {
+    if (!window.confirm('清空本机的场景、常用语和设置？清空后不能恢复。')) return;
+    SETTING_KEYS.concat(['sq-welcomed']).forEach(function (k) {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+    closeSheet($('#settings'));
+    toast('已清空，正在重载…');
+    setTimeout(function () { location.reload(); }, 600);
+  }
+
+  /* ---------------- 底部弹层：自定义场景 / 使用说明 ---------------- */
+  var lastFocus = null;
+
+  function openSheet(el) {
+    if (!el) return;
+    lastFocus = document.activeElement;
+    el.classList.add('show');
+    el.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeSheet(el) {
+    if (!el) return;
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden', 'true');
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  }
+
+  function openSceneSheet(id) {
+    var s = id ? loadCustom().filter(function (x) { return x.id === id; })[0] : null;
+    editingId = s ? s.id : '';
+    $('#sheetTitle').textContent = s ? '编辑场景' : '自定义场景';
+    $('#fName').value = s ? s.name : '';
+    $('#fHint').value = s ? (s.hint === '自定义' ? '' : s.hint) : '';
+    $('#fGreet').value = s ? s.greeting : '';
+    $('#fQuick').value = s ? s.quick.join('\n') : '';
+    $('#btnDel').hidden = !s;
+    openSheet($('#sceneSheet'));
+    setTimeout(function () { try { $('#fName').focus(); } catch (e) {} }, 240);
+  }
+
+  function saveSceneSheet() {
+    var name = $('#fName').value.trim();
+    if (!name) {
+      toast('先给它起个名字，比如「医院挂号」');
+      try { $('#fName').focus(); } catch (e) {}
+      return;
+    }
+    var quick = $('#fQuick').value
+      .split(/[\n、，,]/)
+      .map(function (x) { return x.trim(); })
+      .filter(Boolean)
+      .slice(0, 6);
+    var payload = {
+      id: editingId || ('c_' + Date.now().toString(36)),
+      name: name,
+      hint: $('#fHint').value,
+      greeting: $('#fGreet').value,
+      quick: quick
+    };
+    var list = loadCustom();
+    var found = false;
+    list = list.map(function (s) {
+      if (s.id !== payload.id) return s;
+      found = true;
+      return normalizeCustom(payload);
+    });
+    if (!found) list.push(normalizeCustom(payload));
+    saveCustom(list);
+    var isEdit = !!editingId;
+    closeSheet($('#sceneSheet'));
+    editingId = '';
+    renderScenes();
+    toast(isEdit ? '已更新场景' : '已添加，点它就能开始');
+  }
+
+  function deleteScene() {
+    if (!editingId) return;
+    if (!window.confirm('删除这个自定义场景？')) return;
+    saveCustom(loadCustom().filter(function (s) { return s.id !== editingId; }));
+    closeSheet($('#sceneSheet'));
+    editingId = '';
+    renderScenes();
+    toast('已删除');
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  function bind() {
+    /* 场景卡片：长按提起 → 拖动排序；不拖动松手 → 操作单 */
+    var sdrag = { timer: null, el: null, lifted: false, moved: false, x: 0, y: 0, swallow: false };
+
+    function sdStart(e) {
+      if (e.button && e.button !== 0) return;
+      var card = e.target.closest('.scene');
+      if (!card || card.dataset.add) return;
+      if (e.target.closest('.scene-edit')) return;
+      sdrag.x = e.clientX; sdrag.y = e.clientY;
+      sdrag.el = card; sdrag.moved = false; sdrag.swallow = false;
+      clearTimeout(sdrag.timer);
+      sdrag.timer = setTimeout(function () {
+        if (!sdrag.el) return;
+        sdrag.lifted = true;
+        sdrag.swallow = true;
+        sdrag.el.classList.add('lifted');
+        buzz(12);
+      }, 380);
+    }
+
+    function sdMove(e) {
+      if (!sdrag.el) return;
+      var dx = Math.abs(e.clientX - sdrag.x), dy = Math.abs(e.clientY - sdrag.y);
+      if (!sdrag.lifted) {
+        if (dx > 10 || dy > 10) { clearTimeout(sdrag.timer); sdrag.el = null; }
+        return;
+      }
+      if (dx > 8 || dy > 8) sdrag.moved = true;
+      if (!sdrag.moved) return;
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var target = under && under.closest ? under.closest('.scene') : null;
+      if (!target || target === sdrag.el || target.dataset.add) return;
+      var box = $('#scenes');
+      var kids = Array.prototype.slice.call(box.children);
+      if (kids.indexOf(target) > kids.indexOf(sdrag.el)) box.insertBefore(sdrag.el, target.nextSibling);
+      else box.insertBefore(sdrag.el, target);
+      buzz(6);
+    }
+
+    function sdEnd() {
+      clearTimeout(sdrag.timer);
+      if (!sdrag.el) return;
+      var card = sdrag.el;
+      sdrag.el = null;
+      if (!sdrag.lifted) { sdrag.swallow = false; return; }
+      sdrag.lifted = false;
+      card.classList.remove('lifted');
+      if (sdrag.moved) {
+        var ids = Array.prototype.map.call(document.querySelectorAll('#scenes .scene[data-id]'), function (c) {
+          return c.dataset.id;
+        });
+        saveSceneOrder(ids);
+        renderScenes();
+        toast('场景顺序已保存');
+      } else {
+        openSceneAction(card.dataset.id);
+      }
+      setTimeout(function () { sdrag.swallow = false; }, 320);
+    }
+
+    $('#scenes').addEventListener('pointerdown', sdStart);
+    $('#scenes').addEventListener('pointermove', sdMove);
+    $('#scenes').addEventListener('pointerup', sdEnd);
+    $('#scenes').addEventListener('pointercancel', sdEnd);
+
+    $('#scenes').addEventListener('click', function (e) {
+      if (sdrag.swallow) { sdrag.swallow = false; return; }
+      var edit = e.target.closest('.scene-edit');
+      if (edit) {
+        var card = edit.closest('.scene');
+        if (card) openSceneSheet(card.dataset.id);
+        return;
+      }
+      var btn = e.target.closest('.scene');
+      if (!btn) return;
+      if (btn.dataset.add) { openSceneSheet(''); return; }
+      start(btn.dataset.id);
+    });
+
+    // 长按操作单
+    $('#sceneActEdit').addEventListener('click', function () {
+      var id = sceneActId;
+      closeSheet($('#sceneAction'));
+      if (id) openSceneSheet(id);
+    });
+    $('#sceneActDel').addEventListener('click', function () {
+      if (!sceneActId) return;
+      if (!window.confirm('删除这个自定义场景？')) return;
+      saveCustom(loadCustom().filter(function (s) { return s.id !== sceneActId; }));
+      closeSheet($('#sceneAction'));
+      renderScenes();
+      toast('场景已删除');
+    });
+    $('#sceneActTop').addEventListener('click', function () {
+      if (!sceneActId) return;
+      var ids = visibleScenes().map(function (s) { return s.id; });
+      closeSheet($('#sceneAction'));
+      if (ids[0] === sceneActId) {
+        toast('它已经是最前面的了');
+        return;
+      }
+      saveSceneOrder(L.moveToFront(ids, sceneActId));
+      renderScenes();
+      toast('已移到最前');
+    });
+    $('#sceneActHide').addEventListener('click', function () {
+      if (!sceneActId) return;
+      var h = loadHidden();
+      if (h.indexOf(sceneActId) < 0) h.push(sceneActId);
+      saveHidden(h);
+      closeSheet($('#sceneAction'));
+      renderScenes();
+      toast('已隐藏，可在场景下面恢复');
+    });
+    $('#btnRestore').addEventListener('click', function () {
+      saveHidden([]);
+      renderScenes();
+      toast('已恢复隐藏的场景');
+    });
+
+    $('#scenes').addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (e.target.closest('.scene-edit')) return;
+      var card = e.target.closest('.scene');
+      if (!card) return;
+      e.preventDefault();
+      if (card.dataset.add) { openSceneSheet(''); return; }
+      start(card.dataset.id);
+    });
+
+    $('#btnHelp').addEventListener('click', function () { openSheet($('#helpSheet')); });
+    $('#btnSettings').addEventListener('click', openSettings);
+    $('#btnHelpSettings').addEventListener('click', function () {
+      closeSheet($('#helpSheet'));
+      openSettings();
+    });
+    $('#btnExport').addEventListener('click', exportSettings);
+    $('#btnExportFile').addEventListener('click', exportSettingsFile);
+    $('#btnImport').addEventListener('click', importSettings);
+    $('#btnWipe').addEventListener('click', wipeAll);
+    $('#fsSeg').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-fs]');
+      if (!b) return;
+      state.fs = b.dataset.fs;
+      applyFs();
+      toast('字号：' + (b.textContent || ''));
+    });
+
+    // 首次引导
+    $('#welcomeDemo').addEventListener('click', function () {
+      markWelcomed();
+      closeSheet($('#welcome'));
+      start('dine', { skipGreeting: true, quiet: true });
+      startDemo();
+    });
+    $('#welcomeSkip').addEventListener('click', function () {
+      markWelcomed();
+      closeSheet($('#welcome'));
+    });
+    $('#btnPhrase').addEventListener('click', openPhraseSheet);
+    $('#btnPhraseAdd').addEventListener('click', addPhrase);
+    $('#phraseInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addPhrase(); }
+    });
+    $('#phraseList').addEventListener('click', function (e) {
+      var pin = e.target.closest('[data-pin]');
+      if (pin) {
+        togglePin(state.scenario.id, pin.dataset.pin);
+        renderPhraseList();
+        return;
+      }
+      var up = e.target.closest('[data-up]');
+      if (up) { movePhrase(up.dataset.up, -1); return; }
+      var down = e.target.closest('[data-down]');
+      if (down) { movePhrase(down.dataset.down, 1); return; }
+      var b = e.target.closest('.phrase-del');
+      if (b) deletePhrase(b.dataset.del, false);
+    });
+    $('#phraseGlobalList').addEventListener('click', function (e) {
+      var b = e.target.closest('.phrase-del');
+      if (b) deletePhrase(b.dataset.gdel, true);
+    });
+    $('#btnSave').addEventListener('click', saveSceneSheet);
+    $('#btnDel').addEventListener('click', deleteScene);
+    $('#btnCancel').addEventListener('click', function () { closeSheet($('#sceneSheet')); });
+
+    // 遮罩 / 关闭按钮统一处理
+    document.addEventListener('click', function (e) {
+      var closer = e.target.closest('[data-close]');
+      if (!closer) return;
+      var sheet = closer.closest('.sheet');
+      if (!sheet) return;
+      if (sheet.id === 'pointSheet') closePointSheet();
+      else if (sheet.id === 'welcome') { markWelcomed(); closeSheet(sheet); }
+      else closeSheet(sheet);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      ['#sceneSheet', '#helpSheet', '#pointSheet', '#phraseSheet'].forEach(function (sel) {
+        var el = $(sel);
+        if (!el.classList.contains('show')) return;
+        if (sel === '#pointSheet') closePointSheet();
+        else closeSheet(el);
+      });
+      if ($('#pass').classList.contains('show')) closePass();
+    });
+
+    $('#btnDemo').addEventListener('click', function () {
+      start('dine', { skipGreeting: true, quiet: true });
+      startDemo();
+    });
+
+    $('#btnBack').addEventListener('click', function () {
+      if (state.lines.length > 2) { endSession(); return; }
+      stopDemo(); stopMic(); releaseAwake(); show('home');
+    });
+
+    $('#btnEnd').addEventListener('click', endSession);
+
+    $('#btnFs').addEventListener('click', function () {
+      var seq = ['m', 'l', 'xl'];
+      var i = seq.indexOf(state.fs);
+      state.fs = seq[(i + 1) % seq.length];
+      applyFs();
+      toast('字号：' + ({ m: '标准', l: '大', xl: '特大' }[state.fs]));
+    });
+
+    $('#btnMic').addEventListener('click', toggleMic);
+
+    /* 长按提起 → 拖动排序；只长按不拖动 = 置顶/取消置顶 */
+    var drag = { timer: null, lifted: false, moved: false, el: null, x: 0, y: 0, swallow: false };
+
+    function chipsInBar() {
+      return Array.prototype.slice.call(document.querySelectorAll('#quick .chip'));
+    }
+
+    function dragStart(e) {
+      if (e.button && e.button !== 0) return;   // 右键交给 contextmenu
+      var chip = e.target.closest('.chip');
+      if (!chip || !state.scenario) return;
+      drag.x = e.clientX; drag.y = e.clientY;
+      drag.el = chip;
+      drag.moved = false;
+      drag.swallow = false;
+      clearTimeout(drag.timer);
+      drag.timer = setTimeout(function () {
+        if (!drag.el) return;
+        drag.lifted = true;
+        drag.swallow = true;                 // 长按之后不再当作"点一下发送"
+        drag.el.classList.add('dragging');
+        buzz(12);
+        if (drag.el.classList.contains('global')) toast('全局常用语固定在最左，不能拖动');
+      }, 380);
+    }
+
+    function dragMove(e) {
+      if (!drag.el) return;
+      var dx = Math.abs(e.clientX - drag.x);
+      var dy = Math.abs(e.clientY - drag.y);
+      if (!drag.lifted) {
+        if (dx > 10 || dy > 10) { clearTimeout(drag.timer); drag.el = null; }   // 当成滚动，不提起
+        return;
+      }
+      if (dx > 8 || dy > 8) drag.moved = true;
+      if (!drag.moved) return;
+      if (drag.el.classList.contains('global')) return;
+
+      var box = $('#quick');
+      var r = box.getBoundingClientRect();
+      if (e.clientX > r.right - 36) box.scrollLeft += 12;
+      else if (e.clientX < r.left + 36) box.scrollLeft -= 12;
+
+      var under = document.elementFromPoint(e.clientX, e.clientY);
+      var target = under && under.closest ? under.closest('.chip') : null;
+      if (!target || target === drag.el) return;
+      if (target.classList.contains('global')) return;
+
+      var draggingPinned = drag.el.classList.contains('pinned');
+      var targetPinned = target.classList.contains('pinned');
+      if (draggingPinned !== targetPinned) return;   // 置顶区和普通区不互相穿越
+
+      var kids = chipsInBar();
+      if (kids.indexOf(target) > kids.indexOf(drag.el)) box.insertBefore(drag.el, target.nextSibling);
+      else box.insertBefore(drag.el, target);
+      buzz(8);
+    }
+
+    function dragEnd() {
+      clearTimeout(drag.timer);
+      if (!drag.el) return;
+      var chip = drag.el;
+      drag.el = null;
+      if (!drag.lifted) { drag.swallow = false; return; }
+
+      drag.lifted = false;
+      chip.classList.remove('dragging');
+      if (drag.moved) { commitDragOrder(chip); drag.moved = false; }
+      else if (!chip.classList.contains('global')) togglePin(state.scenario.id, chip.dataset.t);
+
+      setTimeout(function () { drag.swallow = false; }, 320);
+    }
+
+    function commitDragOrder(chip) {
+      var sc = state.scenario;
+      if (!sc) return;
+      var els = chipsInBar();
+      var p = loadPrefs();
+      if (chip.classList.contains('pinned')) {
+        p.pins = p.pins || {};
+        p.pins[sc.id] = els.filter(function (c) { return c.classList.contains('pinned'); })
+          .map(function (c) { return c.dataset.t; });
+      } else {
+        p.order = p.order || {};
+        p.order[sc.id] = els.filter(function (c) {
+          return !c.classList.contains('global') && !c.classList.contains('pinned');
+        }).map(function (c) { return c.dataset.t; });
+      }
+      savePrefs(p);
+      renderQuick();
+      buzz(18);
+      toast('顺序已保存');
+    }
+
+    $('#quick').addEventListener('pointerdown', dragStart);
+    $('#quick').addEventListener('pointermove', dragMove);
+    $('#quick').addEventListener('pointerup', dragEnd);
+    $('#quick').addEventListener('pointercancel', dragEnd);
+    $('#quick').addEventListener('contextmenu', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip || !state.scenario) return;
+      e.preventDefault();
+      if (chip.classList.contains('global')) { toast('全局常用语固定在最左'); return; }
+      togglePin(state.scenario.id, chip.dataset.t);
+    });
+    // 拖动时阻止页面/横向滚动抢手势
+    document.addEventListener('touchmove', function (e) {
+      if (drag.lifted || sdrag.lifted) e.preventDefault();
+    }, { passive: false });
+
+    $('#quick').addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      if (drag.swallow) { drag.swallow = false; return; }   // 长按/拖动之后吞掉这次点击
+      var text = chip.dataset.t;
+      if (state.scenario && quickModel(state.scenario).some(function (x) { return x.text === text; })) {
+        recordUse(state.scenario.id, text);   // 记住这次选择：全局记总次数，其余记本场景
+      }
+      sendMine(text);
+    });
+
+    $('#btnSend').addEventListener('click', function () { sendMine($('#myInput').value); });
+    $('#myInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); sendMine($('#myInput').value); }
+    });
+
+    $('#btnPass').addEventListener('click', openPass);
+    $('#passClose').addEventListener('click', closePass);
+    $('#passSpeak').addEventListener('click', function () {
+      speak($('#passText').textContent, { rate: 0.9 });
+    });
+
+    // 递屏第二页：对方写给我看
+    Array.prototype.forEach.call(document.querySelectorAll('.pass-tabs button'), function (b) {
+      b.addEventListener('click', function () { setPassTab(b.dataset.ptab); });
+    });
+    var canvas = $('#writePad');
+    canvas.addEventListener('pointerdown', padDown);
+    canvas.addEventListener('pointermove', padMove);
+    canvas.addEventListener('pointerup', padUp);
+    canvas.addEventListener('pointercancel', padUp);
+    canvas.addEventListener('pointerleave', padUp);
+    $('#btnPadClear').addEventListener('click', padClear);
+
+    // 紧急求助
+    $('#btnSos').addEventListener('click', openSos);
+    $('#sosClose').addEventListener('click', closeSos);
+    $('#sosSpeak').addEventListener('click', function () {
+      speak('我听不见，需要帮助，请帮我拨打一二零，或者一一零，谢谢', { rate: 0.9 });
+    });
+    $('#sosCopy').addEventListener('click', function () {
+      withGeo(function () { copyText(sosText()); });
+    });
+    ['#sos120', '#sos110'].forEach(function (sel) {
+      $(sel).addEventListener('click', function () {
+        withGeo(function () { copyText(sosText()); });
+      });
+    });
+    $('#sosPhone').addEventListener('change', function () {
+      try { localStorage.setItem('sq-sos-phone', $('#sosPhone').value.trim()); } catch (e) {}
+    });
+    $('#sosSms').addEventListener('click', function () {
+      var phone = ($('#sosPhone').value || '').trim();
+      if (!phone) { toast('先填家人手机号，再点发短信'); try { $('#sosPhone').focus(); } catch (e) {} return; }
+      try { localStorage.setItem('sq-sos-phone', phone); } catch (e) {}
+      withGeo(function () {
+        var txt = sosText();
+        copyText(txt);
+        try { window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent(txt); }
+        catch (e) { toast('当前设备不能发短信，求助文字已复制'); }
+      });
+    });
+
+    $('#btnHome').addEventListener('click', function () { show('home'); });
+    $('#btnCopy').addEventListener('click', function () {
+      copyText(L.receiptText(state.receipt));
+    });
+    $('#btnComplaint').addEventListener('click', function () {
+      copyText(L.complaintText(state.receipt));
+      toast('投诉材料已复制，可粘贴给平台客服或 12315');
+    });
+    $('#btnDownload').addEventListener('click', function () {
+      downloadText(L.receiptText(state.receipt));
+    });
+
+    window.addEventListener('resize', function () {
+      if (!pad.ready) return;
+      var c = document.getElementById('writePad');
+      if (c && !c.hidden) initPad();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        stopMic();
+        if (call.active) { stopDetection(); stopCallSubs(); }
+      } else if (state.listening === false && $('#view-talk').classList.contains('is-active')) {
+        setLive('已暂停 · 点麦克风继续', false);
+      } else if (call.active) {
+        startDetection();
+        if (call.subs) startCallSubs();
+      }
+    });
+
+    bindCall();
+  }
+
+  /* ---------------- 启动 ---------------- */
+  var IN_APP_UA = /MicroMessenger|MQQBrowser|QQ\/|UCBrowser|Quark|baiduboxapp|AlipayClient|DingTalk|Weibo|Sogou|2345/i.test(navigator.userAgent || '');
+
+  function initCompat() {
+    var bar = document.getElementById('compatBar');
+    if (!bar) return;
+    var weak = IN_APP_UA || !('speechSynthesis' in window) || !SR;
+    var hidden = false;
+    try { hidden = localStorage.getItem('sq-compat-off') === '1'; } catch (e) {}
+    if (!weak || hidden) { bar.hidden = true; return; }
+    bar.hidden = false;
+    var t = document.getElementById('compatText');
+    if (t) {
+      t.textContent = IN_APP_UA
+        ? '当前是 App 内置浏览器，语音识别/播报可能用不了；用 Chrome 或 Edge 打开最稳'
+        : '这个浏览器不支持语音识别/播报；用 Chrome 或 Edge 打开最稳';
+    }
+    document.getElementById('compatCopy').addEventListener('click', function () {
+      copyText(location.href.split('?')[0].split('#')[0]);
+      toast('链接已复制，去 Chrome 粘贴打开');
+    });
+    document.getElementById('compatClose').addEventListener('click', function () {
+      bar.hidden = true;
+      try { localStorage.setItem('sq-compat-off', '1'); } catch (e) {}
+    });
+  }
+
+  function init() {
+    try { state.fs = localStorage.getItem('sq-fs') || 'm'; } catch (e) {}
+    renderScenes();
+    applyFs();
+    bind();
+    initCompat();
+    if (!SR) {
+      $('#micTip').textContent = '当前浏览器不支持实时收音（Chrome / Edge 支持）。可以先点「直接看演示」，或用打字和预设话术完整体验。';
+    }
+    // 直达链接：index.html#demo 自动演示；index.html#dine / #store / ... 直达场景
+    var hash = (location.hash || '').replace('#', '');
+    if (hash === 'demo') {
+      start('dine', { skipGreeting: true, quiet: true });
+      startDemo();
+    } else if (allScenarios().some(function (s) { return s.id === hash; })) {
+      start(hash, { quiet: true });
+    } else {
+      // 第一次进来：给一张 30 秒上手卡（只出现一次）
+      var seen = false;
+      try { seen = !!localStorage.getItem('sq-welcomed'); } catch (e) {}
+      if (!seen) setTimeout(function () { openSheet($('#welcome')); }, 500);
+    }
+  }
+
+  init();
+})();
+
+
+
+
+
+
+</script>
+</body>
+</html>
+
+
+
