@@ -8,7 +8,7 @@
 
 ## 立即使用
 
-- **在线版**：<https://shengqiao.netlify.app>（部署后替换；手机/电脑打开即用）
+- **在线版**：<https://lpcgit-cpu.github.io/shengqiao/>（部署后替换；手机/电脑打开即用）
 - **单文件版**：下载本仓库的 `index.html`，双击即可离线运行
 - **本地预览**：`python -m http.server 8000` → <http://localhost:8000>
 
